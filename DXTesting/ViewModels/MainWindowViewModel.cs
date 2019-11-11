@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Windows;
 
 namespace DXTesting.ViewModels
 {
     class MainWindowViewModel : BaseViewModel
     {
+
         private string _saveDir = @"C:\Results";
         public string SaveDir
         {

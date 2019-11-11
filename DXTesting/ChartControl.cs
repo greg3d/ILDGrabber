@@ -31,10 +31,10 @@ namespace DXTesting
         float xx = 0.5f;
         float yy = 0.5f;
 
-        float marginLeft = 10;
-        float marginBottom = 10;
+        float marginLeft = 5;
+        float marginBottom = 12;
         float marginTop = 5;
-        float marginRight = 50;
+        float marginRight = 40;
 
         float plotHeight = 100;
 
@@ -168,7 +168,7 @@ namespace DXTesting
                     };
 
                     RawRectangleF PlotArea = new RawRectangleF(curPlot.x1, curPlot.y1, curPlot.x2, curPlot.y2);
-                    target.DrawRectangle(PlotArea, brushblack, 1.0f);
+                    target.DrawRectangle(PlotArea, helperBrush, 1.0f);
 
                     Connection con = conz.cons[i];
 
@@ -221,12 +221,13 @@ namespace DXTesting
 
                             target.DrawLine(point1, point2, helperBrush);
 
-                            drawText(k.ToString(), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
+                            drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
                         }
 
                         // крайний нижний тик справа
-                        drawText(curPlot.xMax.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
+                        //drawText(curPlot.xMax.ToString("{0:C}"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
 
+                        /*
                         // расчет тиков для Y
                         float realPlotHeight = curPlot.y2 - curPlot.y1;
                         float yTickCount = (float)Math.Ceiling(realPlotHeight / 20);
@@ -261,17 +262,20 @@ namespace DXTesting
 
                             target.DrawLine(point1, point2, helperBrush);
 
-                            drawText(k.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
-                        }
+                            drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
+                        }*/
+
+                        labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
                         // рисуем значения yMax и yMin
-                        drawText(curPlot.yMax.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1);
-                        drawText(curPlot.yMax.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2);
+                        drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1);
+                        drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2);
 
                         // рисуем текущее значение
                         labelTextFormat.TextAlignment = TextAlignment.Leading;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-                        drawText(con.vdata.Y[(int)nPoints-1].ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 4);
+                        drawText(con.vdata.Y[(int)nPoints-1].ToString("F3"), ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 4);
 
                         // Рисуем сам график
                         float ww = curPlot.x2 - curPlot.x1;

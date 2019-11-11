@@ -9,13 +9,27 @@ using System.Windows;
 namespace DXTesting
 {
 
+
+
+
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+
+
         public static MainWindow Instance { get; private set; } // тут будет форма
 
+
+        /*
+
+        private void Window_Closing(object sender, ExitEventArgs e)
+        {
+            Connectionz cons = Connectionz.getInstance();
+            cons.Close();
+
+        }*/
 
         public MainWindow()
         {        
