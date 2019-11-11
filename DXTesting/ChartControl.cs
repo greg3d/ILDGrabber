@@ -26,7 +26,7 @@ namespace DXTesting
     class ChartControl : G2dControl
     {
 
-        private Thread thread;
+        //private Thread thread;
 
         float xx = 0.5f;
         float yy = 0.5f;
@@ -48,23 +48,69 @@ namespace DXTesting
         //int numberOfPlots = 1;
 
 
-        int Mode = 0;
+        //int Mode = 0;
 
         //public RawVector2[] pt1 = new RawVector2[nPoub];
                 
         public ChartControl()
         {
-
-            /*
-            float nnn =6.28f / num;
-            for (int i = 0; i < num; i++)
-            {
-                pt1[i] = new RawVector2(i * nnn, (float)Math.Sin(i * nnn));
-            }*/
-
             resCache.Add("BlueBrush", t => new SolidColorBrush(t, new RawColor4(0.0f, 0.0f, 1.0f, 1.0f)));
             resCache.Add("BlackBrush", t => new SolidColorBrush(t, new RawColor4(0.0f, 0.0f, 0.0f, 1.0f)));
             resCache.Add("HelperBrush", t => new SolidColorBrush(t, new RawColor4(0.2f, 0.2f, 0.2f, 0.7f)));
+        }
+
+        private void drawText(string text, ref TextFormat format, ref Brush brush, ref RenderTarget t, float x, float y )
+        {
+
+            float w = text.Length * format.FontSize;
+            format.WordWrapping = WordWrapping.NoWrap;
+
+            float x1;
+            float x2;
+            float y1;
+            float y2;
+
+            switch (format.ParagraphAlignment)
+            {
+                case ParagraphAlignment.Near:
+                    y1 = y;
+                    y2 = y + format.FontSize * 1.5f;
+                    break;
+                case ParagraphAlignment.Far:
+                    y1 = y - format.FontSize * 1.5f;
+                    y2 = y;
+                    break;
+                case ParagraphAlignment.Center:
+                    y1 = y - format.FontSize * 1.5f / 2;
+                    y2 = y + format.FontSize * 1.5f / 2;
+                    break;
+                default:
+                    y1 = y - format.FontSize * 1.5f / 2;
+                    y2 = y + format.FontSize * 1.5f / 2;
+                    break;
+            }
+
+            switch (format.TextAlignment)
+            {
+                case TextAlignment.Leading:
+                    x1 = x;
+                    x2 = x + w;
+                    break;
+                case TextAlignment.Trailing:
+                    x1 = x - w;
+                    x2 = x;
+                    break;
+                case TextAlignment.Center:
+                    x1 = x - w / 2;
+                    x2 = x + w / 2;
+                    break;
+                default:
+                    x1 = x;
+                    x2 = x + w;
+                    break;
+            }
+
+            t.DrawText(text, format, new RawRectangleF(x1, y1, x2, y2), brush);
 
         }
 
@@ -85,19 +131,21 @@ namespace DXTesting
             return retVec;
         }
 
+        //private void Redraw()
+
         public override void Render(RenderTarget target)
         {
             //RenderWait = 2;
             target.Clear(new RawColor4(1.0f, 1.0f, 1.0f, 1.0f));
 
-            target.AntialiasMode = AntialiasMode.Aliased;
+            //target.AntialiasMode = AntialiasMode.Aliased;
 
             Brush brushblack = resCache["BlackBrush"] as Brush;
             Brush helperBrush = resCache["HelperBrush"] as Brush;
             Brush blueBrush = resCache["BlueBrush"] as Brush;
 
-            TextFormat labelTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", 12);
-            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
+            TextFormat labelTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", 10);
+            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Far;
             labelTextFormat.TextAlignment = TextAlignment.Center;
 
 
@@ -123,21 +171,6 @@ namespace DXTesting
                     target.DrawRectangle(PlotArea, brushblack, 1.0f);
 
                     Connection con = conz.cons[i];
-                    //Trace.WriteLine(con.IsGrabbing);
-
-                    /*
-                    switch (Mode)
-                    {
-                        case 1:
-                            Console.WriteLine("Case 1");
-                            break;
-                        case 2:
-                            Console.WriteLine("Case 2");
-                            break;
-                        default:
-                            Console.WriteLine("Default case");
-                            break;
-                    }*/
 
                     if (con.IsGrabbing)
                     {
@@ -145,6 +178,8 @@ namespace DXTesting
                         //Trace.Write('d');
                         
                         //FileStream fs = new FileStream("D:\\file.txt",FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+                        // Определяем YMax и YMin 
                         foreach (var val in con.vdata.Y)
                         {
                             if (val > curPlot.yMax)
@@ -164,12 +199,19 @@ namespace DXTesting
                             }
                         }
 
+                        // определяем xMax и xMin
                         curPlot.xMax = con.vdata.X[(int)nPoints-1];
                         curPlot.xMin = con.vdata.X[0];
 
+
+                        // расстояние между тиками по X = 5 сек
                         int tickGap = 5; //sec
                         var tnum = xMax / tickGap;
 
+                        labelTextFormat.TextAlignment = TextAlignment.Center;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+
+                        // рисуем тики
                         for (var k = curPlot.xMin + tickGap; k < curPlot.xMax; k = k + tickGap)
                         {
 
@@ -179,15 +221,11 @@ namespace DXTesting
 
                             target.DrawLine(point1, point2, helperBrush);
 
-                           
-
-                            //target.DrawText(k.ToString(), labelTextFormat, 
-
-                            //ctx.fillText(k, tickPoint.x, curPlot.y2 + bottomMargin / 2);
+                            drawText(k.ToString(), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
                         }
 
                         // крайний нижний тик справа
-                        // ctx.fillText(curPlot.xMax, curPlot.x2, curPlot.y2 + bottomMargin / 2);
+                        drawText(curPlot.xMax.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
 
                         // расчет тиков для Y
                         float realPlotHeight = curPlot.y2 - curPlot.y1;
@@ -209,61 +247,37 @@ namespace DXTesting
 
                         var minYTick = Math.Floor(curPlot.yMin / realYTickGap) * realYTickGap;
 
+
+                        //  рисуем тики для Y 
+                        labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
+
                         for (var k = minYTick + realYTickGap; k < curPlot.yMax; k = k + realYTickGap)
                         {
 
-                            RawVector2 tickPoint = PointToCanvas(curPlot, con.vdata.Y[4999], (float)k);
+                            RawVector2 tickPoint = PointToCanvas(curPlot, con.vdata.Y[(int)nPoints-1], (float)k);
                             RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
                             RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
 
                             target.DrawLine(point1, point2, helperBrush);
 
-
-                            //ctx.fillStyle = "#CCC";
-                            //ctx.textAlign = "left";
-                            //ctx.textBaseline = "middle";
-                            //ctx.font = "10px Arial";
-                            //ctx.fillText(k, curPlot.x2 + 4, tickPoint.y);
+                            drawText(k.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
                         }
 
-                        // yMax и yMin
-                        //ctx.fillStyle = "#000";
-                        //ctx.textAlign = "left";
-                        //ctx.textBaseline = "middle";
-                        //ctx.font = "10px Arial";
-                        //ctx.fillText(curPlot.yMax, curPlot.x2 + 4, curPlot.y1);
-                        //ctx.fillText(curPlot.yMin, curPlot.x2 + 4, curPlot.y2);
+                        // рисуем значения yMax и yMin
+                        drawText(curPlot.yMax.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1);
+                        drawText(curPlot.yMax.ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2);
 
-                        // текущее значение
-                        //ctx.fillStyle = "#eee";
-                        //ctx.fillRect(curPlot.x1 + 1, curPlot.y1 + 1, 150, 22);
-                        //ctx.fillStyle = "#000";
-                        //ctx.textAlign = "left";
-                        //ctx.textBaseline = "top";
-                        //ctx.font = "14px Arial";
-                        //ctx.fillText(channel.name + ": " + channel.y[nPoints - 1], curPlot.x1 + 4, curPlot.y1 + 4);
+                        // рисуем текущее значение
+                        labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+                        drawText(con.vdata.Y[(int)nPoints-1].ToString(), ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 4);
 
-                        // Drawing plot 
-
-
-
-                        /*
-                        ctx.beginPath();
-                        ctx.strokeStyle = colors[kk];
-                        kk++;
-                        if (kk >= colors.length)
-                        {
-                            kk = 0;
-                        }*/
-
-                        //ctx.moveTo(stPoint.x, stPoint.y);
-
-                        //Trace.Write("st");
-
+                        // Рисуем сам график
                         float ww = curPlot.x2 - curPlot.x1;
                         int step = 1;
 
-                        if (nPoints/ww > 2)
+                        if ( nPoints/ww > 2 )
                         {
                             step = (int)Math.Floor(nPoints / ww);
                         }
@@ -274,24 +288,6 @@ namespace DXTesting
                             RawVector2 endPoint = PointToCanvas(curPlot, con.vdata.X[jjj+step], con.vdata.Y[jjj + step]);
                             target.DrawLine(stPoint, endPoint, blueBrush);
                         }
-                        //Thread.Sleep(1);
-                        //Trace.Write("en");
-
-                        //RawVector2 stPoint = PointToCanvas(curPlot, con.vdata.X[0], con.vdata.Y[0]);
-                        //RawVector2 endPoint = PointToCanvas(curPlot, con.vdata.X[4999], con.vdata.Y[4999]);
-
-                        //target.DrawLine(new RawVector2(5, curPlot.y1 / 2 + curPlot.y2 / 2), new RawVector2(5 + 50, curPlot.y1 / 2 + curPlot.y2 / 2), blueBrush);
-
-
-                        /*
-                        for (int jj = 5000 - 1; jj > 5; jj=-5)
-                        {
-                            RawVector2 stPoint = PointToCanvas(curPlot, con.vdata.X[jj], con.vdata.Y[jj]);
-                            RawVector2 endPoint = PointToCanvas(curPlot, con.vdata.X[jj-5], con.vdata.Y[jj-5]);
-                            target.DrawLine(new RawVector2(5, curPlot.y1/2 + curPlot.y2/2), new RawVector2(5+50, curPlot.y1 / 2 + curPlot.y2 / 2), blueBrush);
-                            target.DrawLine(stPoint, endPoint, blueBrush);
-                        }*/
-
 
                     }
 

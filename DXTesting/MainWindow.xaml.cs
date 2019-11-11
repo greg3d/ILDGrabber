@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DXTesting.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
@@ -7,19 +8,20 @@ using System.Windows;
 
 namespace DXTesting
 {
+
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
         public static MainWindow Instance { get; private set; } // тут будет форма
-        
+
+
         public MainWindow()
-        {
-            
-            
+        {        
 
             InitializeComponent();
+            this.DataContext = new MainWindowViewModel();
 
             //Connectionz cons = Connectionz.getInstance(1);
 
@@ -51,20 +53,11 @@ namespace DXTesting
             Instance.GrabButton.IsEnabled = true;
         }
 
-        private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void PropertyChanged(object sender, ProgressChangedEventArgs e)
         {
-
+            MessageBox.Show(e.ToString());
         }
 
-        private void TextBox_TextChanged_1(object sender, System.Windows.Controls.TextChangedEventArgs e)
-        {
-
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 
 }
