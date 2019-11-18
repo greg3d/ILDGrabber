@@ -63,17 +63,21 @@ namespace DXTesting
 
         public bool GrabTrigger = false;
 
+        private long ticks = 0;
+        private Thread thread;
 
         private byte[] measrate;
         private byte[] outputrs;
         private byte[] outputnone;
         private byte[] newLine;
 
+        // p
         public ViewData vdata = new ViewData();
-        private long ticks = 0;
-        public float Range { get; private set; } = 50f;
+        public float Range { get; private set; } = 50f; // mm
+        public string Name { get; private set; }
+        public string Serial { get; private set; }
 
-        private Thread thread;
+
   
         public Connection(Ellipse indi)
         {
@@ -99,8 +103,6 @@ namespace DXTesting
         {
 
             int port = (int)_port;
-
-            
 
         }
 
@@ -187,9 +189,9 @@ namespace DXTesting
                         
 
 
-                        //MessageBox.Show("Other: " + PortNum.ToString() + " " + size.ToString());
+                       // MessageBox.Show(infoOut.Length.ToString());
 
-                        if (size == 0)
+                        if (infoOut.Length < 1)
                         {
                             stream.Close();
                             client.Close();               
@@ -200,7 +202,17 @@ namespace DXTesting
                         else
                         {
                             stream.Flush();
-                            MessageBox.Show(infoOut);
+
+                            var sArr = infoOut.Split("\n".ToCharArray());
+
+                            
+
+                            MessageBox.Show(sArr[1]); // name
+                            MessageBox.Show(sArr[2]); // serial
+                            MessageBox.Show(sArr[3]);
+                            MessageBox.Show(sArr[4]);
+                            MessageBox.Show(sArr[5]);
+                            MessageBox.Show(sArr[6]); // measure range
                             //IsReady = true;
                             localMode = 2;
                             //localMode = 10;
@@ -338,7 +350,6 @@ namespace DXTesting
 
                 do
                 {
-                    
                     size = stream.Read(data, 0, 96);
 
                     int realSize = size / 3;
@@ -360,7 +371,7 @@ namespace DXTesting
                         float err;
 
                         val = (float)(low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + (float)((high & 0b0000_1111) << 12);
-                        val = 0.01f * ( (102f / 65520f) * val - 1f) * 50f ;
+                        val = 0.01f * ( (102f / 65520f) * val - 1f) * 50f;
 
                         err = high & 0b0111_0000;
 
@@ -376,12 +387,9 @@ namespace DXTesting
 
                         errors[j] = err;
 
-                        
                         FileWriter.Write(err);
                         FileWriter.Write(tt);
                         FileWriter.Write(val);
-
-
 
                     }
 
@@ -428,7 +436,6 @@ namespace DXTesting
             indicators[5] = MainWindow.Instance.EStatus6;
             indicators[6] = MainWindow.Instance.EStatus7;
             indicators[7] = MainWindow.Instance.EStatus8;
-
 
             cons = new Connection[num];
 
