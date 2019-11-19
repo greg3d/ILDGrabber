@@ -119,7 +119,9 @@ namespace DXTesting
             
         }
 
-        public void Connect(int port)
+        
+
+        public async void Connect(int port)
         {
             PortNum = port;
 
@@ -146,7 +148,8 @@ namespace DXTesting
                                 MainWindow.Instance.ConnectButton.IsEnabled = false;
                                 */
 
-                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionSuccess",ConnID));
+                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionSuccess", ConnID));
+                                
                                 IsConnected = true;
                                 localMode = 1;
                             }

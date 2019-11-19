@@ -72,27 +72,32 @@ namespace DXTesting
 
         private void SetConnIndicator(object sender, ConnectionEventArgs e)
         {
-
-
-
-            switch (e.Message)
+            
+            this.Dispatcher.Invoke(() =>
             {
-                case "ConnectionSuccess":
-                    indicators[e.LaserID].Fill = System.Windows.Media.Brushes.LightGreen;
+                ConnectButton.IsEnabled = false;
 
-                    GrabButton.IsEnabled = true;
-                    StopButton.IsEnabled = false;
-                    ConnectButton.IsEnabled = false;
-                    break;
+                switch (e.Message)
+                {
+                    case "ConnectionSuccess":
+                        indicators[e.LaserID].Fill = System.Windows.Media.Brushes.LightGreen;
 
-                case "ConnectionError":
-                    indicators[e.LaserID].Fill = System.Windows.Media.Brushes.Red;
-                    indicators[e.LaserID].Stroke = System.Windows.Media.Brushes.Yellow;
-                    break;
+                        GrabButton.IsEnabled = true;
+                        StopButton.IsEnabled = false;
+                        ConnectButton.IsEnabled = false;
+                        break;
 
-                default:
-                    break;
-            }
+                    case "ConnectionError":
+                        indicators[e.LaserID].Fill = System.Windows.Media.Brushes.Red;
+                        indicators[e.LaserID].Stroke = System.Windows.Media.Brushes.Yellow;
+                        break;
+
+                    default:
+                        break;
+                }
+            });
+
+            
         }
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
