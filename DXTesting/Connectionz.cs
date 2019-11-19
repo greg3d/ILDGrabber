@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.Net.Sockets;
-using System.Windows.Shapes;
 using System.Windows;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,13 +44,31 @@ namespace DXTesting
 
     }
 
+    class ConnectionEventArgs
+    {
+        public string Message { get; }
+
+        public int LaserID { get; }
+
+        public ConnectionEventArgs (string mes, int id)
+        {
+            Message = mes;
+            LaserID = id;
+        }
+    }
+
+
     class Connection
     {
+
+        public delegate void StatusHandler(object sender, ConnectionEventArgs e);
+        public event StatusHandler Notify;
+
         public TcpClient client;
         public NetworkStream stream;
         private FileStream fs;
         private BinaryWriter FileWriter;
-        private Ellipse indicator;
+        //private Ellipse indicator;
 
         public string filename { get; private set; }
 
@@ -62,6 +79,7 @@ namespace DXTesting
         public bool IsReady { get; private set; } = false;
 
         public bool GrabTrigger = false;
+        public int ConnID { get; private set; }
 
         private long ticks = 0;
         private Thread thread;
@@ -79,10 +97,12 @@ namespace DXTesting
 
 
   
-        public Connection(Ellipse indi)
+        public Connection(int id)
         {
             client = new TcpClient();
-            indicator = indi;
+            //indicator = indi;
+
+            ConnID = id;
 
             string command = "MEASRATE 0.25";
             measrate = Encoding.ASCII.GetBytes(command);
@@ -97,13 +117,6 @@ namespace DXTesting
 
             
             
-        }
-
-        private void connectTask(object _port)
-        {
-
-            int port = (int)_port;
-
         }
 
         public void Connect(int port)
@@ -126,18 +139,26 @@ namespace DXTesting
                             if (result)
                             {
 
+                                /*
                                 indicator.Fill = System.Windows.Media.Brushes.LightGreen;
                                 MainWindow.Instance.GrabButton.IsEnabled = true;
                                 MainWindow.Instance.StopButton.IsEnabled = false;
                                 MainWindow.Instance.ConnectButton.IsEnabled = false;
+                                */
 
+                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionSuccess",ConnID));
                                 IsConnected = true;
                                 localMode = 1;
                             }
                             else
                             {
+
+                                /*
                                 indicator.Fill = System.Windows.Media.Brushes.Red;
                                 indicator.Stroke = System.Windows.Media.Brushes.Yellow;
+                                 */
+
+                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
 
                                 localMode = 10;
                                 IsConnected = false;
@@ -146,11 +167,13 @@ namespace DXTesting
 
                         catch (SocketException e)
                         {
+                            Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
                             MessageBox.Show(e.Message);
                             localMode = 10;
                         }
                         catch (Exception e)
                         {
+                            Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
                             MessageBox.Show(e.Message);
                             localMode = 10;
                         }
@@ -167,12 +190,8 @@ namespace DXTesting
 
                         stream.Write(getinfo, 0, getinfo.Length);
                         stream.Write(newLine, 0, newLine.Length);
-
-
-
-                        byte[] data = new byte[128];
-
                         
+                        byte[] data = new byte[128];
 
                         int size = 0;
 
@@ -187,16 +206,18 @@ namespace DXTesting
                             Thread.Sleep(100);
                         }
                         
-
-
-                       // MessageBox.Show(infoOut.Length.ToString());
+                        // MessageBox.Show(infoOut.Length.ToString());
 
                         if (infoOut.Length < 1)
                         {
                             stream.Close();
-                            client.Close();               
+                            client.Close();
+
+                            /*
                             indicator.Fill = System.Windows.Media.Brushes.Yellow;
                             indicator.Stroke = System.Windows.Media.Brushes.Red;
+                            */
+                            Notify?.Invoke(this, new ConnectionEventArgs("GetInfoError", ConnID));
                             localMode = 10;
                         }
                         else
@@ -204,22 +225,23 @@ namespace DXTesting
                             stream.Flush();
 
                             var sArr = infoOut.Split("\n".ToCharArray());
+                            /*
+                             MessageBox.Show(sArr[1]); // name
+                             MessageBox.Show(sArr[2]); // serial
+                             MessageBox.Show(sArr[3]);
+                             MessageBox.Show(sArr[4]);
+                             MessageBox.Show(sArr[5]);
+                             MessageBox.Show(sArr[6]); // measure range
+                             */
 
-                            
+                            /*
+                               indicator.Fill = System.Windows.Media.Brushes.LightGreen;
+                               indicator.Stroke = System.Windows.Media.Brushes.Yellow;*/
 
-                            MessageBox.Show(sArr[1]); // name
-                            MessageBox.Show(sArr[2]); // serial
-                            MessageBox.Show(sArr[3]);
-                            MessageBox.Show(sArr[4]);
-                            MessageBox.Show(sArr[5]);
-                            MessageBox.Show(sArr[6]); // measure range
-                            //IsReady = true;
+                            Notify?.Invoke(this, new ConnectionEventArgs("GetInfoSuccess", ConnID));
                             localMode = 2;
-                            //localMode = 10;
-                            indicator.Fill = System.Windows.Media.Brushes.LightGreen;
-                            indicator.Stroke = System.Windows.Media.Brushes.Yellow;
-                        }
 
+                        }
 
 
                         break;
@@ -244,15 +266,23 @@ namespace DXTesting
                             localMode = 10;
                             IsConnected = false;
                             IsReady = false;
+
+                            Notify?.Invoke(this, new ConnectionEventArgs("PrepareError", ConnID));
+
+                            /*
                             indicator.Fill = System.Windows.Media.Brushes.Yellow;
-                            indicator.Stroke = System.Windows.Media.Brushes.Red;
+                            indicator.Stroke = System.Windows.Media.Brushes.Red;*/
+
                         } else
                         {
                             localMode = 10;
                             IsConnected = true;
                             IsReady = true;
+
+                            Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
+                            /*
                             indicator.Fill = System.Windows.Media.Brushes.LightGreen;
-                            indicator.Stroke = System.Windows.Media.Brushes.Green;
+                            indicator.Stroke = System.Windows.Media.Brushes.Green;*/
                         }
 
                         break;
@@ -280,7 +310,10 @@ namespace DXTesting
         public void StartGrab()
         {
             ticks = 0;
-            indicator.Stroke = System.Windows.Media.Brushes.White;
+
+            Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
+
+            //indicator.Stroke = System.Windows.Media.Brushes.White;
 
             thread = new Thread(new ThreadStart(GrabbingTask));
             thread.Start();
@@ -416,7 +449,7 @@ namespace DXTesting
         //private int[] localPorts = new int[8] { 31001, 32002, 33003, 34004, 35005, 36006, 37007, 38008 };
         //Dictionary<int, Ellipse> indicators = new Dictionary<int, Ellipse>(8);
 
-        Ellipse[] indicators;
+        //Ellipse[] indicators;
       
         private static Connectionz instance;
 
@@ -426,7 +459,7 @@ namespace DXTesting
         {
             //indicators.Add(1, MainWindow.Instance.EStatus1);
 
-            indicators = new Ellipse[8];
+            /*indicators = new Ellipse[8];
 
             indicators[0] = MainWindow.Instance.EStatus1;
             indicators[1] = MainWindow.Instance.EStatus2;
@@ -435,13 +468,13 @@ namespace DXTesting
             indicators[4] = MainWindow.Instance.EStatus5;
             indicators[5] = MainWindow.Instance.EStatus6;
             indicators[6] = MainWindow.Instance.EStatus7;
-            indicators[7] = MainWindow.Instance.EStatus8;
+            indicators[7] = MainWindow.Instance.EStatus8;*/
 
             cons = new Connection[num];
 
             for (int i = 0; i < num; i++)
             {
-                cons[i] = new Connection(indicators[i]);
+                cons[i] = new Connection(i);
             }
             Count = num;
         }
@@ -484,24 +517,20 @@ namespace DXTesting
 
         public void ConnectAllTask()
         {
-            
+            for (int i = 0; i < Count; i++)
+            {
+                cons[i].Connect(ports[i]);
+            }
         }
 
         public void ConnectAll()
         {
 
-            for (int i = 0; i < Count; i++)
-            {
-                cons[i].Connect(ports[i]);
-            }
-            
-            /*
-
             Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
             conThread.Name = "Connections thread";
             conThread.IsBackground = true;
 
-            conThread.Start();*/
+            conThread.Start();
             
         }
 
