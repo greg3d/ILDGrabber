@@ -1,5 +1,4 @@
-﻿using SharpDX;
-using SharpDX.Direct2D1;
+﻿using SharpDX.Direct2D1;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -7,10 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 
 namespace DXTesting
 {
@@ -34,7 +30,7 @@ namespace DXTesting
         private int frameCountHistTotal = 0;
         private Queue<int> frameCountHist = new Queue<int>();
 
-       // public AutoResetEvent evt;
+        // public AutoResetEvent evt;
 
         // - property --------------------------------------------------------------------
 
@@ -100,9 +96,9 @@ namespace DXTesting
             }
 
             StartD3D();
-            StartRendering(); 
+            StartRendering();
             //RenderOnce();
-            
+
         }
 
         private void Window_Closing(object sender, RoutedEventArgs e)
@@ -119,12 +115,12 @@ namespace DXTesting
 
         private void RenderOnce()
         {
-            
+
             System.Windows.Media.CompositionTarget.Rendering += OnRendering2;
             //renderTimer.Start();
         }
 
-   
+
         private void OnRendering(object sender, EventArgs e)
         {
             if (!renderTimer.IsRunning)
@@ -132,7 +128,7 @@ namespace DXTesting
                 return;
             }
             //Console.WriteLine(e);
-            
+
             PrepareAndCallRender();
             d3DSurface.InvalidateD3DImage();
 
@@ -165,11 +161,11 @@ namespace DXTesting
         {
             if (d3DSurface.IsFrontBufferAvailable)
             {
-               StartRendering();
+                StartRendering();
             }
             else
             {
-               StopRendering();
+                StopRendering();
             }
         }
 

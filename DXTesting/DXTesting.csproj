@@ -81,6 +81,7 @@
     <Compile Include="Connectionz.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="ResourceCache.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Page Include="MainWindow.xaml">

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Windows;
-
-namespace DXTesting.ViewModels
+﻿namespace DXTesting.ViewModels
 {
     class MainWindowViewModel : BaseViewModel
     {

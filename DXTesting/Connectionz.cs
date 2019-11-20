@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Text;
+using System.IO;
 using System.Net.Sockets;
-using System.Windows;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.IO;
+using System.Windows;
+using System.Windows.Input;
 
 namespace DXTesting
 
@@ -40,7 +41,7 @@ namespace DXTesting
         }
 
 
-        
+
 
     }
 
@@ -50,7 +51,7 @@ namespace DXTesting
 
         public int LaserID { get; }
 
-        public ConnectionEventArgs (string mes, int id)
+        public ConnectionEventArgs(string mes, int id)
         {
             Message = mes;
             LaserID = id;
@@ -58,7 +59,7 @@ namespace DXTesting
     }
 
 
-    class Connection
+    class Connection : IDisposable
     {
 
         public delegate void StatusHandler(object sender, ConnectionEventArgs e);
@@ -95,8 +96,22 @@ namespace DXTesting
         public string Name { get; private set; }
         public string Serial { get; private set; }
 
+        private bool demoMode = false;
 
-  
+        public void Dispose() {
+
+            fs.Close();
+            FileWriter.Close();
+            stream.Close();
+            client.Close();
+
+            fs?.Dispose();
+            FileWriter?.Dispose();
+            stream?.Dispose();
+            client?.Dispose();
+
+        }
+
         public Connection(int id)
         {
             client = new TcpClient();
@@ -109,204 +124,209 @@ namespace DXTesting
 
             command = "OUTPUT RS422";
             outputrs = Encoding.ASCII.GetBytes(command);
-            
+
             command = "OUTPUT NONE";
             outputnone = Encoding.ASCII.GetBytes(command);
 
             newLine = Encoding.ASCII.GetBytes(Environment.NewLine);
 
-            
-            
+            Settings sets = Settings.getInstance();
+            demoMode = sets.Demo;
+
         }
 
-        
 
-        public async void Connect(int port)
+
+        public void Connect(int port)
         {
+
             PortNum = port;
 
-            int localMode = 0;
-
-            while (localMode < 10)
+            if (demoMode)
             {
+                Thread.Sleep(100);
+                IsConnected = true;
+                IsReady = true;
+                Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
 
-                switch (localMode)
+            }
+            else
+            {
+                int localMode = 0;
+                while (localMode < 10)
                 {
-                    case 0:
-                        try
-                        {
-                            Task connTa = client.ConnectAsync("192.168.0.252", port);
-                            bool result = connTa.Wait(1000);
 
-                            if (result)
+                    switch (localMode)
+                    {
+                        case 0:
+                            try
                             {
+                                Task connTa = client.ConnectAsync("192.168.0.252", port);
+                                bool result = connTa.Wait(500);
+
+                                if (result)
+                                {
+
+                                    /*
+                                    indicator.Fill = System.Windows.Media.Brushes.LightGreen;
+                                    MainWindow.Instance.GrabButton.IsEnabled = true;
+                                    MainWindow.Instance.StopButton.IsEnabled = false;
+                                    MainWindow.Instance.ConnectButton.IsEnabled = false;
+                                    */
+
+                                    Notify?.Invoke(this, new ConnectionEventArgs("ConnectionSuccess", ConnID));
+
+                                    IsConnected = true;
+                                    localMode = 1;
+                                }
+                                else
+                                {
+
+                                    /*
+                                    indicator.Fill = System.Windows.Media.Brushes.Red;
+                                    indicator.Stroke = System.Windows.Media.Brushes.Yellow;
+                                     */
+
+                                    Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
+
+                                    localMode = 10;
+                                    IsConnected = false;
+                                }
+                            }
+
+                            catch (SocketException e)
+                            {
+                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
+                                MessageBox.Show(e.Message);
+                                localMode = 10;
+                            }
+                            catch (Exception e)
+                            {
+                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
+                                MessageBox.Show(e.Message);
+                                localMode = 10;
+                            }
+
+                            break;
+
+                        case 1: // пытаемся чекнуть лазер 
+
+                            stream = client.GetStream();
+
+                            // отправка сообщения\\\
+                            string command = "GETINFO";
+                            byte[] getinfo = Encoding.ASCII.GetBytes(command);
+
+                            stream.Write(getinfo, 0, getinfo.Length);
+                            stream.Write(newLine, 0, newLine.Length);
+
+                            byte[] data = new byte[128];
+
+                            int size = 0;
+
+                            string infoOut = "";
+
+                            Thread.Sleep(100);
+
+                            while (stream.DataAvailable) // пока данные есть в потоке
+                            {
+                                size = stream.Read(data, 0, data.Length);
+                                infoOut = infoOut + Encoding.ASCII.GetString(data, 0, size);
+                                Thread.Sleep(100);
+                            }
+
+                            // MessageBox.Show(infoOut.Length.ToString());
+
+                            if (infoOut.Length < 1)
+                            {
+                                stream.Close();
+                                client.Close();
 
                                 /*
-                                indicator.Fill = System.Windows.Media.Brushes.LightGreen;
-                                MainWindow.Instance.GrabButton.IsEnabled = true;
-                                MainWindow.Instance.StopButton.IsEnabled = false;
-                                MainWindow.Instance.ConnectButton.IsEnabled = false;
+                                indicator.Fill = System.Windows.Media.Brushes.Yellow;
+                                indicator.Stroke = System.Windows.Media.Brushes.Red;
                                 */
-
-                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionSuccess", ConnID));
-                                
-                                IsConnected = true;
-                                localMode = 1;
+                                Notify?.Invoke(this, new ConnectionEventArgs("GetInfoError", ConnID));
+                                localMode = 10;
                             }
                             else
                             {
+                                stream.Flush();
 
+                                var sArr = infoOut.Split("\n".ToCharArray());
                                 /*
-                                indicator.Fill = System.Windows.Media.Brushes.Red;
-                                indicator.Stroke = System.Windows.Media.Brushes.Yellow;
+                                 MessageBox.Show(sArr[1]); // name
+                                 MessageBox.Show(sArr[2]); // serial
+                                 MessageBox.Show(sArr[3]);
+                                 MessageBox.Show(sArr[4]);
+                                 MessageBox.Show(sArr[5]);
+                                 MessageBox.Show(sArr[6]); // measure range
                                  */
 
-                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
+                                /*
+                                   indicator.Fill = System.Windows.Media.Brushes.LightGreen;
+                                   indicator.Stroke = System.Windows.Media.Brushes.Yellow;*/
 
+                                Notify?.Invoke(this, new ConnectionEventArgs("GetInfoSuccess", ConnID));
+                                localMode = 2;
+
+                            }
+
+
+                            break;
+
+                        case 2:
+
+                            stream.Write(measrate, 0, measrate.Length);
+                            stream.Write(newLine, 0, newLine.Length);
+                            data = new byte[16];
+                            size = 0;
+
+                            Thread.Sleep(500);
+
+                            while (stream.DataAvailable) // пока данные есть в потоке
+                            {
+                                size = stream.Read(data, 0, data.Length);
+                                Thread.Sleep(100);
+                            }
+
+                            if (size == 0)
+                            {
                                 localMode = 10;
                                 IsConnected = false;
+                                IsReady = false;
+
+                                Notify?.Invoke(this, new ConnectionEventArgs("PrepareError", ConnID));
+
+                                /*
+                                indicator.Fill = System.Windows.Media.Brushes.Yellow;
+                                indicator.Stroke = System.Windows.Media.Brushes.Red;*/
+
                             }
-                        }
+                            else
+                            {
+                                localMode = 10;
+                                IsConnected = true;
+                                IsReady = true;
 
-                        catch (SocketException e)
-                        {
-                            Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
-                            MessageBox.Show(e.Message);
-                            localMode = 10;
-                        }
-                        catch (Exception e)
-                        {
-                            Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
-                            MessageBox.Show(e.Message);
-                            localMode = 10;
-                        }
+                                Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
+                                /*
+                                indicator.Fill = System.Windows.Media.Brushes.LightGreen;
+                                indicator.Stroke = System.Windows.Media.Brushes.Green;*/
+                            }
 
-                        break;
-
-                    case 1: // пытаемся чекнуть лазер 
-
-                        stream = client.GetStream();
-
-                        // отправка сообщения\\\
-                        string command = "GETINFO";
-                        byte[] getinfo = Encoding.ASCII.GetBytes(command);
-
-                        stream.Write(getinfo, 0, getinfo.Length);
-                        stream.Write(newLine, 0, newLine.Length);
-                        
-                        byte[] data = new byte[128];
-
-                        int size = 0;
-
-                        string infoOut = "";
-
-                        Thread.Sleep(100);
-                        
-                        while (stream.DataAvailable) // пока данные есть в потоке
-                        {
-                            size = stream.Read(data, 0, data.Length);
-                            infoOut = infoOut + Encoding.ASCII.GetString(data, 0, size);
-                            Thread.Sleep(100);
-                        }
-                        
-                        // MessageBox.Show(infoOut.Length.ToString());
-
-                        if (infoOut.Length < 1)
-                        {
-                            stream.Close();
-                            client.Close();
-
-                            /*
-                            indicator.Fill = System.Windows.Media.Brushes.Yellow;
-                            indicator.Stroke = System.Windows.Media.Brushes.Red;
-                            */
-                            Notify?.Invoke(this, new ConnectionEventArgs("GetInfoError", ConnID));
-                            localMode = 10;
-                        }
-                        else
-                        {
-                            stream.Flush();
-
-                            var sArr = infoOut.Split("\n".ToCharArray());
-                            /*
-                             MessageBox.Show(sArr[1]); // name
-                             MessageBox.Show(sArr[2]); // serial
-                             MessageBox.Show(sArr[3]);
-                             MessageBox.Show(sArr[4]);
-                             MessageBox.Show(sArr[5]);
-                             MessageBox.Show(sArr[6]); // measure range
-                             */
-
-                            /*
-                               indicator.Fill = System.Windows.Media.Brushes.LightGreen;
-                               indicator.Stroke = System.Windows.Media.Brushes.Yellow;*/
-
-                            Notify?.Invoke(this, new ConnectionEventArgs("GetInfoSuccess", ConnID));
-                            localMode = 2;
-
-                        }
+                            break;
 
 
-                        break;
+                        default:
+                            break;
+                    }
 
-                    case 2:
-
-                        stream.Write(measrate, 0, measrate.Length);
-                        stream.Write(newLine, 0, newLine.Length);
-                        data = new byte[16];
-                        size = 0;
-                        
-                        Thread.Sleep(500);
-
-                        while (stream.DataAvailable) // пока данные есть в потоке
-                        {
-                            size = stream.Read(data, 0, data.Length);
-                            Thread.Sleep(100);
-                        }
-
-                        if (size == 0)
-                        {
-                            localMode = 10;
-                            IsConnected = false;
-                            IsReady = false;
-
-                            Notify?.Invoke(this, new ConnectionEventArgs("PrepareError", ConnID));
-
-                            /*
-                            indicator.Fill = System.Windows.Media.Brushes.Yellow;
-                            indicator.Stroke = System.Windows.Media.Brushes.Red;*/
-
-                        } else
-                        {
-                            localMode = 10;
-                            IsConnected = true;
-                            IsReady = true;
-
-                            Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
-                            /*
-                            indicator.Fill = System.Windows.Media.Brushes.LightGreen;
-                            indicator.Stroke = System.Windows.Media.Brushes.Green;*/
-                        }
-
-                        break;
+                    //MessageBox.Show(localMode.ToString());
+                } // endwhile
+            }
 
 
-                    default:
-                        break;
-                }
-
-                //MessageBox.Show(localMode.ToString());
-            } // endwhile
-
-
-
-            //Thread conThread = new Thread(new ParameterizedThreadStart(connectTask));
-            //conThread.Start(port);           
-        }
-
-        public FileStream GetFileStream()
-        {
-            return fs;
 
         }
 
@@ -343,8 +363,8 @@ namespace DXTesting
 
         public void Close()
         {
-             
-           
+
+
             GrabTrigger = false;
             IsGrabbing = false;
             IsConnected = false;
@@ -361,7 +381,12 @@ namespace DXTesting
             fs.Close();
             stream.Close();
             client.Close();
-            
+
+
+        }
+
+        private void DemoGrabbingTask()
+        {
 
         }
 
@@ -370,13 +395,13 @@ namespace DXTesting
             if (client.Connected && IsReady)
             {
 
-                filename = "D:\\flow_"+ PortNum + ".dat";
+                filename = "D:\\flow_" + PortNum + ".dat";
 
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
-                
+
                 byte[] data = new byte[96];
-                
+
                 int size = 0;
 
                 stream.Write(outputrs, 0, outputrs.Length);
@@ -394,7 +419,7 @@ namespace DXTesting
                     Single[] realValues = new Single[realSize];
                     Single[] errors = new Single[realSize];
 
-                    for (int j=0; j < realValues.Length; j++)
+                    for (int j = 0; j < realValues.Length; j++)
                     {
 
                         ticks++;
@@ -407,7 +432,7 @@ namespace DXTesting
                         float err;
 
                         val = (float)(low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + (float)((high & 0b0000_1111) << 12);
-                        val = 0.01f * ( (102f / 65520f) * val - 1f) * 50f;
+                        val = 0.01f * ((102f / 65520f) * val - 1f) * 50f;
 
                         err = high & 0b0111_0000;
 
@@ -441,19 +466,19 @@ namespace DXTesting
             }
         }
 
-        
+
 
     }
     class Connectionz
     {
 
-        
+
         private int[] ports = new int[8] { 4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008 };
         //private int[] localPorts = new int[8] { 31001, 32002, 33003, 34004, 35005, 36006, 37007, 38008 };
         //Dictionary<int, Ellipse> indicators = new Dictionary<int, Ellipse>(8);
 
         //Ellipse[] indicators;
-      
+
         private static Connectionz instance;
 
         public Connection[] cons { get; private set; }
@@ -520,21 +545,43 @@ namespace DXTesting
 
         public void ConnectAllTask()
         {
-            for (int i = 0; i < Count; i++)
+
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
             {
-                cons[i].Connect(ports[i]);
+                for (int i = 0; i < Count; i++)
+                {
+                    cons[i].Connect(ports[i]);
+                }
             }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+
+
         }
 
         public void ConnectAll()
         {
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
+            {
 
-            Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
-            conThread.Name = "Connections thread";
-            conThread.IsBackground = true;
+                Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
+                conThread.Name = "Connections thread";
+                conThread.IsBackground = true;
+                conThread.SetApartmentState(ApartmentState.STA);
 
-            conThread.Start();
-            
+                conThread.Start();
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+
+
+
         }
 
     }

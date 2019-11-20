@@ -15,7 +15,7 @@ namespace DXTesting
         private static DeviceEx D3DDevice;
 
         private Texture renderTarget;
-       // private Thread renderThread;
+        // private Thread renderThread;
 
         // - property --------------------------------------------------------------------
 

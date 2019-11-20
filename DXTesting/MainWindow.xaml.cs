@@ -1,9 +1,5 @@
 ﻿using DXTesting.ViewModels;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Shapes;
 
@@ -72,7 +68,7 @@ namespace DXTesting
 
         private void SetConnIndicator(object sender, ConnectionEventArgs e)
         {
-            
+
             this.Dispatcher.Invoke(() =>
             {
                 ConnectButton.IsEnabled = false;
@@ -82,7 +78,7 @@ namespace DXTesting
                     case "ConnectionSuccess":
                         indicators[e.LaserID].Fill = System.Windows.Media.Brushes.LightGreen;
 
-                        GrabButton.IsEnabled = true;
+                        //GrabButton.IsEnabled = true;
                         StopButton.IsEnabled = false;
                         ConnectButton.IsEnabled = false;
                         break;
@@ -92,12 +88,30 @@ namespace DXTesting
                         indicators[e.LaserID].Stroke = System.Windows.Media.Brushes.Yellow;
                         break;
 
+                    case "PrepareSuccess":
+                        indicators[e.LaserID].Fill = System.Windows.Media.Brushes.LightGreen;
+                        indicators[e.LaserID].Stroke = System.Windows.Media.Brushes.Green;
+
+                        GrabButton.IsEnabled = true;
+                        StopButton.IsEnabled = false;
+                        ConnectButton.IsEnabled = false;
+                        break;
+                    case "StartGrabSuccess":
+                        indicators[e.LaserID].Fill = System.Windows.Media.Brushes.LightGreen;
+                        indicators[e.LaserID].Stroke = System.Windows.Media.Brushes.White;
+                        break;
+
+                    case "PrepareError":
+                        indicators[e.LaserID].Fill = System.Windows.Media.Brushes.Red;
+                        indicators[e.LaserID].Stroke = System.Windows.Media.Brushes.White;
+                        break;
+
                     default:
                         break;
                 }
             });
 
-            
+
         }
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
