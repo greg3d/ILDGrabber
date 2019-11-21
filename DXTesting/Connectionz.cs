@@ -79,7 +79,7 @@ namespace DXTesting
         public int ConnID { get; private set; }
 
         private long ticks = 0;
-        private Thread thread;
+        //private Thread thread;
 
         private byte[] measrate;
         private byte[] outputrs;
@@ -328,19 +328,17 @@ namespace DXTesting
         }
 
 
-        public static async void VoidAsyncMethod()
+        public void StartGrab()
         {
-            var cancellationSource = new CancellationTokenSource();
+            TaskFactory tf = new TaskFactory(TaskCreationOptions.LongRunning, TaskContinuationOptions.LongRunning);
+            ticks = 0;
+            GrabTrigger = true;
 
-            await Task.Factory.StartNew(
-                // Code of action will be executed on other context
-                () => Thread.Sleep(10000),
-                cancellationSource.Token,
-                TCO.LongRunning | TCO.AttachedToParent | TCO.PreferFairness,
-                schedulerи
-            );
-
-            //  Code after await will be executed on captured context
+            Task grabbing = tf.StartNew(DemoGrabbingTask);
+                        
+            //Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
+            //grabbing.Start();
+            
         }
         /*
         public void StartGrab()
@@ -364,40 +362,21 @@ namespace DXTesting
             Thread.Sleep(100);
             //thread.Abort();
 
-            stream.Write(outputnone, 0, outputnone.Length);
-            stream.Write(newLine, 0, newLine.Length);
-
-            //stream.Close();
-            //client.Close();
-
-            FileWriter.Close();
-            fs.Close();
-        }
-
-        public void Close()
-        {
-
-
-            GrabTrigger = false;
-            IsGrabbing = false;
-            IsConnected = false;
-            IsReady = false;
-
-            Thread.Sleep(100);
-
-            if (thread.IsAlive)
+            if (demoMode)
             {
-                thread.Abort();
+
+            } else
+            {
+                stream.Write(outputnone, 0, outputnone.Length);
+                stream.Write(newLine, 0, newLine.Length);
+                stream.Close();
+                client.Close();
             }
 
             FileWriter.Close();
             fs.Close();
-            stream.Close();
-            client.Close();
-
-
         }
-
+    
         private void DemoGrabbingTask()
         {
             if (IsReady && IsConnected)
@@ -406,15 +385,14 @@ namespace DXTesting
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
 
-                byte[] data = new byte[96];
-
                 ticks = 0;
+
+                Thread.Sleep(200);
 
                 do
                 {
 
-
-                    int realSize = 128;
+                    int realSize = 48;
 
                     Single[] timeValues = new Single[realSize];
                     Single[] realValues = new Single[realSize];
@@ -428,11 +406,11 @@ namespace DXTesting
                         float val;
                         float err;
 
-                        val = (float)Math.Sin(2 * 3.14 * (ticks / 1024)) * Range;
+                        val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 4096f)) * 25;
 
                         err = 0b0111_0000;
 
-                        float tt = (float)ticks / 250f;
+                        float tt = ticks / 250f;
                         timeValues[j] = tt;
 
                         realValues[j] = val;
@@ -445,14 +423,20 @@ namespace DXTesting
 
                     }
 
-                    vdata.Push(timeValues, realValues, realSize);
+                    Task pushing = Task.Factory.StartNew(() =>
+                    {
+                        vdata.Push(timeValues, realValues, realSize);
+                    });
+
+                    //pushing.
+                    
 
                     Thread.Sleep(100);
 
                     IsGrabbing = true;
 
                 }
-                while (stream.DataAvailable && GrabTrigger); // пока данные есть в потоке
+                while (GrabTrigger); // пока данные есть в потоке и не отменена операция
 
             }
         }
@@ -539,7 +523,6 @@ namespace DXTesting
     class Connectionz
     {
 
-
         private int[] ports = new int[8] { 4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008 };
         //private int[] localPorts = new int[8] { 31001, 32002, 33003, 34004, 35005, 36006, 37007, 38008 };
         //Dictionary<int, Ellipse> indicators = new Dictionary<int, Ellipse>(8);
@@ -590,24 +573,18 @@ namespace DXTesting
 
         public void Grab()
         {
-            int i = 0;
-            cons[i].StartGrab();
+            for (int i = 0; i < Count; i++)
+            {
+                cons[i].StartGrab();
+            }
         }
 
         public void Stop()
         {
-            int i = 0;
-            cons[i].StopGrab();
-        }
-
-        public void Close()
-        {
             for (int i = 0; i < Count; i++)
             {
-                cons[i].Close();
+                cons[i].StopGrab();
             }
-
-
         }
 
         public void ConnectAllTask()
@@ -625,7 +602,6 @@ namespace DXTesting
             {
                 Mouse.OverrideCursor = null;
             }
-
 
         }
 
