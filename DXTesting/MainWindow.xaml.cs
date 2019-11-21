@@ -5,28 +5,11 @@ using System.Windows.Shapes;
 
 namespace DXTesting
 {
-
-
-
-
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-
-
-        //public static MainWindow Instance { get; private set; } // тут будет форма
-
-
-        /*
-
-        private void Window_Closing(object sender, ExitEventArgs e)
-        {
-            Connectionz cons = Connectionz.getInstance();
-            cons.Close();
-
-        }*/
 
         private Ellipse[] indicators;
 
@@ -62,7 +45,6 @@ namespace DXTesting
             indicators[6] = EStatus7;
             indicators[7] = EStatus8;
 
-            //cons.Notify=
         }
 
 

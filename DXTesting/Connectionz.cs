@@ -39,10 +39,6 @@ namespace DXTesting
                 Y[size + i] = yy[i];
             }
         }
-
-
-
-
     }
 
     class ConnectionEventArgs
@@ -98,7 +94,8 @@ namespace DXTesting
 
         private bool demoMode = false;
 
-        public void Dispose() {
+        public void Dispose()
+        {
 
             fs.Close();
             FileWriter.Close();
@@ -330,6 +327,22 @@ namespace DXTesting
 
         }
 
+
+        public static async void VoidAsyncMethod()
+        {
+            var cancellationSource = new CancellationTokenSource();
+
+            await Task.Factory.StartNew(
+                // Code of action will be executed on other context
+                () => Thread.Sleep(10000),
+                cancellationSource.Token,
+                TCO.LongRunning | TCO.AttachedToParent | TCO.PreferFairness,
+                schedulerи
+            );
+
+            //  Code after await will be executed on captured context
+        }
+        /*
         public void StartGrab()
         {
             ticks = 0;
@@ -342,7 +355,7 @@ namespace DXTesting
             thread.Start();
             GrabTrigger = true;
         }
-
+        */
         public void StopGrab()
         {
             GrabTrigger = false;
@@ -387,7 +400,61 @@ namespace DXTesting
 
         private void DemoGrabbingTask()
         {
+            if (IsReady && IsConnected)
+            {
+                filename = "D:\\flow_" + PortNum + ".dat";
+                fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+                FileWriter = new BinaryWriter(fs);
 
+                byte[] data = new byte[96];
+
+                ticks = 0;
+
+                do
+                {
+
+
+                    int realSize = 128;
+
+                    Single[] timeValues = new Single[realSize];
+                    Single[] realValues = new Single[realSize];
+                    Single[] errors = new Single[realSize];
+
+                    for (int j = 0; j < realValues.Length; j++)
+                    {
+
+                        ticks++;
+
+                        float val;
+                        float err;
+
+                        val = (float)Math.Sin(2 * 3.14 * (ticks / 1024)) * Range;
+
+                        err = 0b0111_0000;
+
+                        float tt = (float)ticks / 250f;
+                        timeValues[j] = tt;
+
+                        realValues[j] = val;
+
+                        errors[j] = err;
+
+                        FileWriter.Write(err);
+                        FileWriter.Write(tt);
+                        FileWriter.Write(val);
+
+                    }
+
+                    vdata.Push(timeValues, realValues, realSize);
+
+                    Thread.Sleep(100);
+
+                    IsGrabbing = true;
+
+                }
+                while (stream.DataAvailable && GrabTrigger); // пока данные есть в потоке
+
+            }
         }
 
         private void GrabbingTask()
