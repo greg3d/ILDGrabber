@@ -122,6 +122,10 @@ namespace DXTesting
             MessageBox.Show(e.ToString());
         }
 
+        private void chartControl1_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            
+        }
     }
 
 }

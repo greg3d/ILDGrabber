@@ -41,6 +41,18 @@ namespace DXTesting
         }
     }
 
+    class RealData
+    {
+        public float[] X;
+        public float[] Y;
+
+        public RealData(long n)
+        {
+            X = new float[n];
+            Y = new float[n];
+        }
+    }
+
     class ConnectionEventArgs
     {
         public string Message { get; }
@@ -65,6 +77,7 @@ namespace DXTesting
         public NetworkStream stream;
         private FileStream fs;
         private BinaryWriter FileWriter;
+        private BinaryReader fReader;
         //private Ellipse indicator;
 
         public string filename { get; private set; }
@@ -72,6 +85,7 @@ namespace DXTesting
         public int PortNum { get; private set; }
 
         public bool IsGrabbing { get; private set; } = false;
+        public bool IsPostProc { get; private set; } = false;
         public bool IsConnected { get; private set; } = false;
         public bool IsReady { get; private set; } = false;
 
@@ -88,11 +102,15 @@ namespace DXTesting
 
         // p
         public ViewData vdata = new ViewData();
+        public RealData rdata;
         public float Range { get; private set; } = 50f; // mm
         public string Name { get; private set; }
         public string Serial { get; private set; }
 
         private bool demoMode = false;
+
+        public Task grabbing;
+        public TaskFactory tf;
 
         public void Dispose()
         {
@@ -330,42 +348,33 @@ namespace DXTesting
 
         public void StartGrab()
         {
-            TaskFactory tf = new TaskFactory(TaskCreationOptions.LongRunning, TaskContinuationOptions.LongRunning);
+            
+            tf = new TaskFactory(
+                TaskCreationOptions.LongRunning,
+                TaskContinuationOptions.LongRunning
+            );
             ticks = 0;
             GrabTrigger = true;
 
-            Task grabbing = tf.StartNew(DemoGrabbingTask);
-                        
+            grabbing = tf.StartNew(DemoGrabbingTask);
             //Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
-            //grabbing.Start();
             
         }
-        /*
-        public void StartGrab()
-        {
-            ticks = 0;
 
-            Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
-
-            //indicator.Stroke = System.Windows.Media.Brushes.White;
-
-            thread = new Thread(new ThreadStart(GrabbingTask));
-            thread.Start();
-            GrabTrigger = true;
-        }
-        */
+        
         public void StopGrab()
         {
             GrabTrigger = false;
             IsGrabbing = false;
 
-            Thread.Sleep(100);
+            //Thread.Sleep(100);
             //thread.Abort();
 
             if (demoMode)
             {
 
-            } else
+            } 
+            else
             {
                 stream.Write(outputnone, 0, outputnone.Length);
                 stream.Write(newLine, 0, newLine.Length);
@@ -375,6 +384,52 @@ namespace DXTesting
 
             FileWriter.Close();
             fs.Close();
+
+
+            fs.Dispose();
+            FileWriter.Dispose();
+            Notify?.Invoke(this, new ConnectionEventArgs("GrabbedSuccess", ConnID));
+
+
+        }
+
+        public void PrepareForView()
+        {
+            fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            fReader = new BinaryReader(fs);
+
+
+            //float[] package = new float[3];
+            long n = fs.Length / 12;
+
+
+            //MessageBox.Show(n.ToString());
+
+            rdata = new RealData(n);
+
+            var i = 0;
+
+            while (fs.Position != fs.Length)
+            {
+                var jjj = fReader.ReadSingle();
+                rdata.X[i] = fReader.ReadSingle();
+                //MessageBox.Show(jjj.ToString());
+
+                rdata.Y[i] = fReader.ReadSingle();
+
+                i++;
+
+            }
+
+
+            IsGrabbing = false;
+            IsPostProc = true;
+
+            //MessageBox.Show(fs.Position.ToString());
+
+            fReader.Close();
+            fs.Close();
+
         }
     
         private void DemoGrabbingTask()
@@ -387,45 +442,45 @@ namespace DXTesting
 
                 ticks = 0;
 
-                Thread.Sleep(200);
+                Thread.Sleep(50);
 
                 do
                 {
 
                     int realSize = 48;
+                    DateTime currentDate = DateTime.Now;
+                    float curTick = currentDate.Second * 1000 + currentDate.Millisecond;
 
-                    Single[] timeValues = new Single[realSize];
+                    Single[] internalCount = new Single[realSize];
                     Single[] realValues = new Single[realSize];
-                    Single[] errors = new Single[realSize];
+                    Single[] timeValues = new Single[realSize];
 
                     for (int j = 0; j < realValues.Length; j++)
                     {
 
                         ticks++;
 
-                        float val;
-                        float err;
-
-                        val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 4096f)) * 25;
-
-                        err = 0b0111_0000;
+                        float val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 4096f)) * 25;
 
                         float tt = ticks / 250f;
-                        timeValues[j] = tt;
+                        internalCount[j] = tt;
 
                         realValues[j] = val;
+                        timeValues[j] = curTick;
 
-                        errors[j] = err;
+                        var package = new byte[4 * 3];
 
-                        FileWriter.Write(err);
-                        FileWriter.Write(tt);
-                        FileWriter.Write(val);
-
+                        Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
+                        FileWriter.Write(package);
+                        
                     }
+
+                    //FileWriter.Write()
+
 
                     Task pushing = Task.Factory.StartNew(() =>
                     {
-                        vdata.Push(timeValues, realValues, realSize);
+                        vdata.Push(internalCount, realValues, realSize);
                     });
 
                     //pushing.
@@ -585,6 +640,21 @@ namespace DXTesting
             {
                 cons[i].StopGrab();
             }
+            Task.WaitAll(new Task[] {
+                cons[0].grabbing,
+                cons[1].grabbing,
+                cons[2].grabbing,
+                cons[3].grabbing,
+                cons[4].grabbing,
+                cons[5].grabbing,
+                cons[6].grabbing,
+                cons[7].grabbing,
+            });
+            for (int i = 0; i < Count; i++)
+            {
+                cons[i].PrepareForView();
+            }
+
         }
 
         public void ConnectAllTask()
