@@ -19,7 +19,7 @@ namespace DXTesting
     class ChartControl : G2dControl
     {
 
-
+        public bool IsPostProc = false;
 
         //private Thread thread;
 
@@ -33,12 +33,30 @@ namespace DXTesting
 
         float plotHeight = 100;
 
-        //float xMin = 0f;
-        float xMax = 300;
-        float yMax = -1e9f;
-        float yMin = 1e9f;
+        public float xMin = 0f;
+        public float xMax = 300;
+        public float yMax = -1e9f;
+        public float yMin = 1e9f;
 
         float nPoints = 5000;
+
+        bool autoYzoom = true;
+
+        public bool AutoYzoom
+        {
+            get
+            {
+                return autoYzoom;
+            }
+            set
+            {
+                autoYzoom = value;
+            }
+        }
+
+        bool autoXzoom = true;
+
+        bool firstRender = true;
 
         //int numberOfPlots = 1;
 
@@ -127,6 +145,68 @@ namespace DXTesting
             return retVec;
         }
 
+        private float OptimalSpacing(double original)
+        {
+            double[] da = { 1.0, 2.0, 5.0 };
+            double multiplier = Math.Pow(10, Math.Floor(Math.Log(original) / Math.Log(10)));
+            double dmin = 100 * multiplier;
+            double spacing = 0.0;
+            double mn = 100;
+            foreach (double d in da)
+            {
+
+            double delta = Math.Abs(original - d * multiplier);
+                if (delta < dmin)
+                {
+                    dmin = delta;
+                    spacing = d * multiplier;
+                }
+                if (d < mn)
+                {
+                    mn = d;
+                }
+            }
+            if (Math.Abs(original - 10 * mn * multiplier) < Math.Abs(original - spacing))
+                spacing = 10 * mn * multiplier;
+            
+            return (float)spacing;
+        }
+
+        private void DoAutoScale(ref float[] X, ref float[] Y, ref Plot curPlot )
+        {
+
+            var N = X.Length;
+
+            foreach (var val in Y)
+            {
+                if (val > curPlot.yMax)
+                {
+                    curPlot.yMax = val;
+                }
+
+                if (val < curPlot.yMin)
+                {
+                    curPlot.yMin = val;
+                }
+
+                if (curPlot.yMax == curPlot.yMin)
+                {
+                    curPlot.yMax = curPlot.yMax + 1;
+                    curPlot.yMin = curPlot.yMin - 1;
+                }
+            }
+
+            // определяем xMax и xMin
+            curPlot.xMax = X[N - 1];
+            curPlot.xMin = X[0];
+
+            xMax = curPlot.xMax;
+            xMin = curPlot.xMin;
+
+            yMax = curPlot.yMax;
+            yMin = curPlot.yMin;
+        }
+
         //private void Redraw()
 
         public override void Render(RenderTarget target)
@@ -164,8 +244,8 @@ namespace DXTesting
                         x2 = (float)ActualWidth - xx - marginRight,
                         y1 = yy + i * plotHeight + marginTop,
                         y2 = yy + i * plotHeight + plotHeight - marginBottom,
-                        yMin = yMin,
-                        yMax = yMax,
+                        yMin = 1e9f,
+                        yMax = -1e9f,
                         xMin = 0f,
                         xMax = 10f
                     };
@@ -177,45 +257,31 @@ namespace DXTesting
 
                     if (con.IsGrabbing)
                     {
+ 
 
-                        //Trace.Write('d');
-
-                        //FileStream fs = new FileStream("D:\\file.txt",FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
-                        // Определяем YMax и YMin 
-                        foreach (var val in con.vdata.Y)
+                        if (autoYzoom)
                         {
-                            if (val > curPlot.yMax)
-                            {
-                                curPlot.yMax = val;
-                            }
-
-                            if (val < curPlot.yMin)
-                            {
-                                curPlot.yMin = val;
-                            }
-
-                            if (curPlot.yMax == curPlot.yMin)
-                            {
-                                curPlot.yMax = curPlot.yMax + 1;
-                                curPlot.yMin = curPlot.yMin - 1;
-                            }
+                            DoAutoScale(ref con.vdata.X, ref con.vdata.Y, ref curPlot);
                         }
-
-                        // определяем xMax и xMin
-                        curPlot.xMax = con.vdata.X[(int)nPoints - 1];
-                        curPlot.xMin = con.vdata.X[0];
-
+                        else
+                        {
+                            curPlot.xMax = xMax;
+                            curPlot.yMax = yMax;
+                            curPlot.xMin = xMin;
+                            curPlot.yMin = yMin;
+                        }
 
                         // расстояние между тиками по X = 5 сек
                         int tickGap = 5; //sec
-                        var tnum = xMax / tickGap;
+                        //var tnum = xMax / tickGap;
+                        float xStart = (float)Math.Ceiling(xMin / tickGap) * tickGap;
+                        float xEnd = (float)Math.Floor(xMax / tickGap) * tickGap;
 
                         labelTextFormat.TextAlignment = TextAlignment.Center;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
 
-                        // рисуем тики
-                        for (var k = curPlot.xMin + tickGap; k < curPlot.xMax; k = k + tickGap)
+                        // рисуем тики X
+                        for (var k = xStart - tickGap; k < xEnd + tickGap; k = k + tickGap)
                         {
 
                             RawVector2 tickPoint = PointToCanvas(curPlot, k, 0);
@@ -227,46 +293,6 @@ namespace DXTesting
                             drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
                         }
 
-                        // крайний нижний тик справа
-                        //drawText(curPlot.xMax.ToString("{0:C}"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
-
-                        /*
-                        // расчет тиков для Y
-                        float realPlotHeight = curPlot.y2 - curPlot.y1;
-                        float yTickCount = (float)Math.Ceiling(realPlotHeight / 20);
-
-                        double yTickGap = (curPlot.yMax - curPlot.yMin) / yTickCount;
-                        var realYTickGap = 1.0e+020;
-                        while (realYTickGap > yTickGap)
-                        {
-                            realYTickGap = realYTickGap / 10;
-                        }
-
-                        realYTickGap = realYTickGap * 10;
-
-                        if (realYTickGap > (curPlot.yMax - curPlot.yMin))
-                        {
-                            realYTickGap = realYTickGap / 2;
-                        }
-
-                        var minYTick = Math.Floor(curPlot.yMin / realYTickGap) * realYTickGap;
-
-
-                        //  рисуем тики для Y 
-                        labelTextFormat.TextAlignment = TextAlignment.Leading;
-                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
-
-                        for (var k = minYTick + realYTickGap; k < curPlot.yMax; k = k + realYTickGap)
-                        {
-
-                            RawVector2 tickPoint = PointToCanvas(curPlot, con.vdata.Y[(int)nPoints-1], (float)k);
-                            RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
-                            RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
-
-                            target.DrawLine(point1, point2, helperBrush);
-
-                            drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2, curPlot.y2 + 2);
-                        }*/
                         //  рисуем тики для Y 
                         labelTextFormat.TextAlignment = TextAlignment.Leading;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
@@ -314,44 +340,41 @@ namespace DXTesting
 
                     if (con.IsPostProc)
                     {
-
+                        
                         var data = con.rdata;
 
+                        // Определяем насколько точек больше чем на экране
                         var N = data.X.Length;
+                        float ww = curPlot.x2 - curPlot.x1;
+                        int step = 1;
 
-                        foreach (var val in data.Y)
+                        if (N / ww > 2)
                         {
-                            if (val > curPlot.yMax)
-                            {
-                                curPlot.yMax = val;
-                            }
-
-                            if (val < curPlot.yMin)
-                            {
-                                curPlot.yMin = val;
-                            }
-
-                            if (curPlot.yMax == curPlot.yMin)
-                            {
-                                curPlot.yMax = curPlot.yMax + 1;
-                                curPlot.yMin = curPlot.yMin - 1;
-                            }
+                            step = (int)Math.Floor(N / ww);
                         }
 
-                        // определяем xMax и xMin
-                        curPlot.xMax = data.X[N - 1];
-                        curPlot.xMin = data.X[0];
-
+                        if (autoYzoom)
+                        {
+                            DoAutoScale(ref data.X, ref data.Y, ref curPlot);
+                        } else
+                        {
+                            curPlot.xMax = xMax;
+                            curPlot.yMax = yMax;
+                            curPlot.xMin = xMin;
+                            curPlot.yMin = yMin;
+                        }
 
                         // расстояние между тиками по X = 5 сек
                         int tickGap = 5; //sec
-                        var tnum = xMax / tickGap;
+                        //var tnum = xMax / tickGap;
+                        float xStart = (float)Math.Ceiling(xMin / tickGap) * tickGap;
+                        float xEnd = (float)Math.Floor(xMax / tickGap) * tickGap;
 
                         labelTextFormat.TextAlignment = TextAlignment.Center;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
 
-                        // рисуем тики
-                        for (var k = curPlot.xMin + tickGap; k < curPlot.xMax; k = k + tickGap)
+                        // рисуем тики X
+                        for (var k = xStart - tickGap; k < xEnd + tickGap; k = k + tickGap)
                         {
 
                             RawVector2 tickPoint = PointToCanvas(curPlot, k, 0);
@@ -391,20 +414,15 @@ namespace DXTesting
                         drawText(data.Y[N - 1].ToString("F3"), ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 4);
 
                         // Рисуем сам график
-                        float ww = curPlot.x2 - curPlot.x1;
-                        int step = 1;
-
-                        if (N / ww > 2)
-                        {
-                            step = (int)Math.Floor(N / ww);
-                        }
-
                         for (int jjj = 0; jjj < N - step; jjj = jjj + step)
                         {
                             RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
                             RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
                             target.DrawLine(stPoint, endPoint, blueBrush);
                         }
+
+                        IsPostProc = true;
+
                     }
 
                 }

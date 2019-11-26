@@ -66,6 +66,16 @@ namespace DXTesting
         }
     }
 
+    class ConzEventArgs
+    {
+        public string Message { get; }
+
+        public ConzEventArgs(string mes)
+        {
+            Message = mes;
+        }
+    }
+
 
     class Connection : IDisposable
     {
@@ -348,7 +358,7 @@ namespace DXTesting
 
         public void StartGrab()
         {
-            
+
             tf = new TaskFactory(
                 TaskCreationOptions.LongRunning,
                 TaskContinuationOptions.LongRunning
@@ -395,6 +405,9 @@ namespace DXTesting
 
         public void PrepareForView()
         {
+           
+            IsGrabbing = false;
+
             fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             fReader = new BinaryReader(fs);
 
@@ -421,14 +434,14 @@ namespace DXTesting
 
             }
 
-
-            IsGrabbing = false;
-            IsPostProc = true;
-
             //MessageBox.Show(fs.Position.ToString());
 
             fReader.Close();
             fs.Close();
+
+            Thread.Sleep(50);
+
+            IsPostProc = true;
 
         }
     
@@ -460,7 +473,7 @@ namespace DXTesting
 
                         ticks++;
 
-                        float val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 4096f)) * 25;
+                        float val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 1024f)) * 25;
 
                         float tt = ticks / 250f;
                         internalCount[j] = tt;
@@ -578,6 +591,9 @@ namespace DXTesting
     class Connectionz
     {
 
+        public delegate void StatusHandler(object sender, ConzEventArgs e);
+        public event StatusHandler SendMessage;
+
         private int[] ports = new int[8] { 4001, 4002, 4003, 4004, 4005, 4006, 4007, 4008 };
         //private int[] localPorts = new int[8] { 31001, 32002, 33003, 34004, 35005, 36006, 37007, 38008 };
         //Dictionary<int, Ellipse> indicators = new Dictionary<int, Ellipse>(8);
@@ -650,6 +666,7 @@ namespace DXTesting
                 cons[6].grabbing,
                 cons[7].grabbing,
             });
+           
             for (int i = 0; i < Count; i++)
             {
                 cons[i].PrepareForView();
@@ -660,39 +677,24 @@ namespace DXTesting
         public void ConnectAllTask()
         {
 
-            Mouse.OverrideCursor = Cursors.Wait;
-            try
-            {
                 for (int i = 0; i < Count; i++)
                 {
                     cons[i].Connect(ports[i]);
                 }
-            }
-            finally
-            {
-                Mouse.OverrideCursor = null;
-            }
+
+                SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
 
         }
 
         public void ConnectAll()
         {
-            Mouse.OverrideCursor = Cursors.Wait;
-            try
-            {
-
+            
                 Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
                 conThread.Name = "Connections thread";
                 conThread.IsBackground = true;
                 conThread.SetApartmentState(ApartmentState.STA);
 
                 conThread.Start();
-            }
-            finally
-            {
-                Mouse.OverrideCursor = null;
-            }
-
 
 
         }
