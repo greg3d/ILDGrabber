@@ -113,6 +113,9 @@ namespace DXTesting
         {
             Connectionz cons = Connectionz.getInstance();
             cons.ConnectAll();
+            checkBoxDemo.IsEnabled = false;
+            textBoxSaveDir.IsEnabled = false;
+
         }
 
         private void GrabButton_Click(object sender, RoutedEventArgs e)
@@ -176,7 +179,7 @@ namespace DXTesting
                 chartControl1.ReleaseMouseCapture();
             }
         }
-                
+
     }
 
 }

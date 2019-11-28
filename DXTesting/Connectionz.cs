@@ -13,11 +13,21 @@ namespace DXTesting
 
     class ViewData
     {
-        public float[] X = new float[5000];
-        public float[] Y = new float[5000];
+        public float[] X;
+        public float[] Y;
 
-        private float[] temp1 = new float[5000];
-        private float[] temp2 = new float[5000];
+        private float[] temp1;
+        private float[] temp2;
+
+        public ViewData()
+        {
+            
+            X = new float[5000];
+            Y = new float[5000];
+            temp1 = new float[5000];
+            temp2 = new float[5000];
+        }
+
         public void Push(float[] xx, float[] yy, int len)
         {
 
@@ -111,7 +121,7 @@ namespace DXTesting
         private byte[] newLine;
 
         // p
-        public ViewData vdata = new ViewData();
+        public ViewData vdata;
         public RealData rdata;
         public float Range { get; private set; } = 50f; // mm
         public string Name { get; private set; }
@@ -155,21 +165,28 @@ namespace DXTesting
 
             newLine = Encoding.ASCII.GetBytes(Environment.NewLine);
 
-            Settings sets = Settings.getInstance();
-            demoMode = sets.Demo;
 
         }
-
 
 
         public void Connect(int port)
         {
 
+            Settings sets = Settings.getInstance();
+            demoMode = sets.Demo;
+
             PortNum = port;
+
+            var sdir = Settings.getInstance().SaveDir + "\\";
+
+            if (!Directory.Exists(sdir))
+                Directory.CreateDirectory(sdir);
+
+            filename = sdir + "flow" + PortNum + ".dat";
 
             if (demoMode)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(50);
                 IsConnected = true;
                 IsReady = true;
                 Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
@@ -192,26 +209,14 @@ namespace DXTesting
                                 if (result)
                                 {
 
-                                    /*
-                                    indicator.Fill = System.Windows.Media.Brushes.LightGreen;
-                                    MainWindow.Instance.GrabButton.IsEnabled = true;
-                                    MainWindow.Instance.StopButton.IsEnabled = false;
-                                    MainWindow.Instance.ConnectButton.IsEnabled = false;
-                                    */
+                                    IsConnected = true;
+                                    localMode = 1;
 
                                     Notify?.Invoke(this, new ConnectionEventArgs("ConnectionSuccess", ConnID));
 
-                                    IsConnected = true;
-                                    localMode = 1;
                                 }
                                 else
                                 {
-
-                                    /*
-                                    indicator.Fill = System.Windows.Media.Brushes.Red;
-                                    indicator.Stroke = System.Windows.Media.Brushes.Yellow;
-                                     */
-
                                     Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
 
                                     localMode = 10;
@@ -260,17 +265,11 @@ namespace DXTesting
                                 Thread.Sleep(100);
                             }
 
-                            // MessageBox.Show(infoOut.Length.ToString());
-
                             if (infoOut.Length < 1)
                             {
                                 stream.Close();
                                 client.Close();
 
-                                /*
-                                indicator.Fill = System.Windows.Media.Brushes.Yellow;
-                                indicator.Stroke = System.Windows.Media.Brushes.Red;
-                                */
                                 Notify?.Invoke(this, new ConnectionEventArgs("GetInfoError", ConnID));
                                 localMode = 10;
                             }
@@ -287,10 +286,6 @@ namespace DXTesting
                                  MessageBox.Show(sArr[5]);
                                  MessageBox.Show(sArr[6]); // measure range
                                  */
-
-                                /*
-                                   indicator.Fill = System.Windows.Media.Brushes.LightGreen;
-                                   indicator.Stroke = System.Windows.Media.Brushes.Yellow;*/
 
                                 Notify?.Invoke(this, new ConnectionEventArgs("GetInfoSuccess", ConnID));
                                 localMode = 2;
@@ -351,14 +346,14 @@ namespace DXTesting
                 } // endwhile
             }
 
-
-
         }
 
 
         public void StartGrab()
         {
-
+            IsPostProc = false;
+            vdata = new ViewData();
+            
             tf = new TaskFactory(
                 TaskCreationOptions.LongRunning,
                 TaskContinuationOptions.LongRunning
@@ -405,7 +400,7 @@ namespace DXTesting
 
         public void PrepareForView()
         {
-           
+            
             IsGrabbing = false;
 
             fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -449,7 +444,6 @@ namespace DXTesting
         {
             if (IsReady && IsConnected)
             {
-                filename = "D:\\flow_" + PortNum + ".dat";
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
 
@@ -513,8 +507,6 @@ namespace DXTesting
         {
             if (client.Connected && IsReady)
             {
-
-                filename = "D:\\flow_" + PortNum + ".dat";
 
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);

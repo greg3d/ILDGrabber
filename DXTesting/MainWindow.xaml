@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DXTesting"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800" x:Name="mw" MinHeight="600" MinWidth="800">
+        Title="MainWindow" Height="600" Width="900" x:Name="mw" MinHeight="600" MinWidth="800">
     <Grid Background="#FFEEEEF2" >
         <Grid.RowDefinitions>
             <RowDefinition MaxHeight="48" Height="61"/>
@@ -20,16 +20,9 @@
         <local:ChartControl x:Name="chartControl1" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" MouseLeftButtonDown="chartControl1_MouseLeftButtonDown" MouseMove="chartControl1_MouseMove" MouseLeftButtonUp="chartControl1_MouseLeftButtonUp" />
         <Label x:Name="label" Content="{Binding Fps, ElementName=chartControl1}" Margin="136,10,10,0" Background="#FFA6A6A6" Height="28" VerticalAlignment="Top"/>
         <Button x:Name="ConnectButton" Content="Коннект" HorizontalAlignment="Left" Margin="10,10,0,0" Width="121" Click="ConnectButton_Click" BorderThickness="1" Style="{DynamicResource RoundedButton}" Height="28" VerticalAlignment="Top" />
-        <Button x:Name="GrabButton" Content="Grab" Margin="10,32,0,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" HorizontalAlignment="Left" Width="79"/>
-        <Button x:Name="StopButton" Content="Stop" HorizontalAlignment="Right" Margin="0,32,11,0" Width="79" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus1" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="10,11,0,0"  Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus2" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="31,11,0,0" Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus3" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="52,11,0,0" Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus4" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="73,11,0,0" Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus5" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="94,11,0,0" Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus6" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="115,11,0,0" Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus7" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="136,11,0,0" Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
-        <Ellipse x:Name="EStatus8" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" HorizontalAlignment="Left" Margin="157,11,0,0" Width="16" Grid.Row="1" Height="16" VerticalAlignment="Top"/>
+        <Button x:Name="GrabButton" Content="Grab" Margin="10,36,0,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" HorizontalAlignment="Left" Width="79"/>
+        <Button x:Name="StopButton" Content="Stop" HorizontalAlignment="Right" Margin="0,36,10,0" Width="79" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top"/>
+
         <Button Content="Сохранить" Margin="10,0,10,10" Grid.Row="2" Height="33" VerticalAlignment="Bottom"/>
         <TextBox Grid.Column="1" HorizontalAlignment="Left" Margin="114,10,0,10" TextWrapping="Wrap" Text="192.168.0.252" Width="103" VerticalContentAlignment="Center" TextAlignment="Center"/>
         <StackPanel Margin="10,0,10,48" Grid.Row="2" Height="78" VerticalAlignment="Bottom">
@@ -49,8 +42,29 @@
         </StackPanel>
         <Label Content="Сохранение результата" Margin="10,0,10,126" Grid.Row="2" VerticalAlignment="Bottom" FontWeight="Bold" Height="26"/>
         <Label x:Name="label1" Content="IP адрес MOXA" Grid.Column="1" HorizontalAlignment="Left" Margin="10,11,0,10" Width="113" VerticalContentAlignment="Center" FontSize="14" Padding="0"/>
-        <TextBox x:Name="SaveDir" Grid.Column="1" Margin="316,10,0,10" TextWrapping="Wrap" VerticalContentAlignment="Center" Text="{Binding Path=SaveDir}" HorizontalAlignment="Left" Width="283"/>
+        <TextBox x:Name="textBoxSaveDir" Grid.Column="1" Margin="316,10,0,10" TextWrapping="Wrap" VerticalContentAlignment="Center" Text="{Binding Path=SaveDir}" HorizontalAlignment="Left" Width="200"/>
         <Label x:Name="label1_Copy" Content="Каталог:" Grid.Column="1" HorizontalAlignment="Left" Margin="252,10,0,10" Width="64" VerticalContentAlignment="Center" FontSize="14" Padding="0"/>
+        <CheckBox x:Name="checkBoxDemo" Content="DEMO" Grid.Column="1" Margin="0,10,10,10" HorizontalAlignment="Right" Width="71" IsChecked="{Binding Path=Demo}"/>
+        <Grid Height="16" Margin="10,10,10,0" Grid.Row="1" VerticalAlignment="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="125*"/>
+                <ColumnDefinition Width="125*"/>
+                <ColumnDefinition Width="125*"/>
+                <ColumnDefinition Width="125*"/>
+                <ColumnDefinition Width="125*"/>
+                <ColumnDefinition Width="125*"/>
+                <ColumnDefinition Width="125*"/>
+                <ColumnDefinition Width="125*"/>
+            </Grid.ColumnDefinitions>
+            <Ellipse x:Name="EStatus1" Grid.Column="7" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Ellipse x:Name="EStatus2" Grid.Column="6" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Ellipse x:Name="EStatus3" Grid.Column="5" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Ellipse x:Name="EStatus4" Grid.Column="4" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Ellipse x:Name="EStatus5" Grid.Column="3" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Ellipse x:Name="EStatus6" Grid.Column="2" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Ellipse x:Name="EStatus7" Grid.Column="1" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Ellipse x:Name="EStatus8" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
 
     </Grid>
 </Window> 

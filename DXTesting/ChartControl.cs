@@ -26,7 +26,7 @@ namespace DXTesting
         float xx = 0.5f;
         float yy = 0.5f;
 
-        float marginLeft = 5;
+        float marginLeft = 15;
         float marginBottom = 12;
         float marginTop = 5;
         float marginRight = 40;
