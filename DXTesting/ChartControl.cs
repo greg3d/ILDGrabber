@@ -18,8 +18,10 @@ namespace DXTesting
     }
     class ChartControl : G2dControl
     {
-
+        public bool DoRedraw = false;
         public bool IsPostProc = false;
+
+        private int _cursor = -1;
 
         //private Thread thread;
 
@@ -209,12 +211,21 @@ namespace DXTesting
 
         //private void Redraw()
 
+        public void DrawCursor(int x)
+        {
+            if (_cursor != x)
+            {
+                _cursor = x;
+            }
+            
+        }
+
         public override void Render(RenderTarget target)
         {
             //RenderWait = 2;
-            target.Clear(new RawColor4(1.0f, 1.0f, 1.0f, 1.0f));
+            
 
-            plotHeight = (float)ActualHeight / 8;
+            
 
             target.AntialiasMode = AntialiasMode.Aliased;
 
@@ -233,8 +244,12 @@ namespace DXTesting
 
 
             Connectionz conz = Connectionz.getInstance();
-            if (conz.Count > 0)
-            {
+
+            if (conz.Count > 0 && DoRedraw)
+            { 
+                target.Clear(new RawColor4(1.0f, 1.0f, 1.0f, 1.0f));
+                plotHeight = (float)ActualHeight / 8;
+
                 for (int i = 0; i < conz.Count; i++)
                 {
 
@@ -257,8 +272,8 @@ namespace DXTesting
 
                     if (con.IsGrabbing)
                     {
- 
 
+                        autoYzoom = true;
                         if (autoYzoom)
                         {
                             DoAutoScale(ref con.vdata.X, ref con.vdata.Y, ref curPlot);
@@ -335,6 +350,8 @@ namespace DXTesting
                             RawVector2 endPoint = PointToCanvas(curPlot, con.vdata.X[jjj + step], con.vdata.Y[jjj + step]);
                             target.DrawLine(stPoint, endPoint, blueBrush);
                         }
+
+                        
 
                     }
 
@@ -419,13 +436,26 @@ namespace DXTesting
                             RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
                             RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
                             target.DrawLine(stPoint, endPoint, blueBrush);
+
+                            // РИСУЕМ КУРСОР 
+
+                            if (_cursor > 0 && _cursor==Math.Round(stPoint.X))
+                            {
+                                RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
+                                RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
+                                target.DrawLine(stPoint2, endPoint2, brushblack);
+                            }
                         }
 
                         IsPostProc = true;
 
+                        
+
                     }
 
                 }
+
+                DoRedraw = false;
             }
 
             labelTextFormat.Dispose();

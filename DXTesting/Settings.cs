@@ -8,6 +8,19 @@
         // поля
         private bool _demo;
         private string _saveDir;
+        private int _fs;
+
+        public int Fs
+        {
+            get
+            {
+                return _fs;
+            }
+            set
+            {
+                _fs = value;
+            }
+        }
 
         // props
         public bool Demo
@@ -38,6 +51,7 @@
         {
             _demo = true;
             _saveDir =  @"C:\Results";
+            _fs = 250;
         }
 
         public static Settings getInstance()

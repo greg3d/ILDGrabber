@@ -91,7 +91,10 @@ namespace DXTesting
     {
 
         public delegate void StatusHandler(object sender, ConnectionEventArgs e);
+        public delegate void RedrawHandler(object sender);
+
         public event StatusHandler Notify;
+        public event RedrawHandler NeedRedraw;
 
         public TcpClient client;
         public NetworkStream stream;
@@ -143,7 +146,6 @@ namespace DXTesting
             fs?.Dispose();
             FileWriter?.Dispose();
             stream?.Dispose();
-            client?.Dispose();
 
         }
 
@@ -394,6 +396,7 @@ namespace DXTesting
             fs.Dispose();
             FileWriter.Dispose();
             Notify?.Invoke(this, new ConnectionEventArgs("GrabbedSuccess", ConnID));
+            NeedRedraw?.Invoke(this);
 
 
         }
@@ -406,12 +409,7 @@ namespace DXTesting
             fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             fReader = new BinaryReader(fs);
 
-
-            //float[] package = new float[3];
-            long n = fs.Length / 12;
-
-
-            //MessageBox.Show(n.ToString());
+            long n = fs.Length / 8;
 
             rdata = new RealData(n);
 
@@ -419,24 +417,21 @@ namespace DXTesting
 
             while (fs.Position != fs.Length)
             {
-                var jjj = fReader.ReadSingle();
+                //var jjj = fReader.ReadSingle();
                 rdata.X[i] = fReader.ReadSingle();
-                //MessageBox.Show(jjj.ToString());
-
                 rdata.Y[i] = fReader.ReadSingle();
 
                 i++;
 
             }
-
-            //MessageBox.Show(fs.Position.ToString());
-
+            
             fReader.Close();
             fs.Close();
 
-            Thread.Sleep(50);
+            //Thread.Sleep(50);
 
             IsPostProc = true;
+            NeedRedraw?.Invoke(this);
 
         }
     
@@ -458,16 +453,16 @@ namespace DXTesting
                     DateTime currentDate = DateTime.Now;
                     float curTick = currentDate.Second * 1000 + currentDate.Millisecond;
 
-                    Single[] internalCount = new Single[realSize];
-                    Single[] realValues = new Single[realSize];
-                    Single[] timeValues = new Single[realSize];
+                    float[] internalCount = new float[realSize];
+                    float[] realValues = new float[realSize];
+                    float[] timeValues = new float[realSize];
 
                     for (int j = 0; j < realValues.Length; j++)
                     {
 
                         ticks++;
 
-                        float val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 1024f)) * 25;
+                        float val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 1024f)) * 25 + PortNum-4000;
 
                         float tt = ticks / 250f;
                         internalCount[j] = tt;
@@ -481,13 +476,11 @@ namespace DXTesting
                         FileWriter.Write(package);
                         
                     }
-
-                    //FileWriter.Write()
-
-
-                    Task pushing = Task.Factory.StartNew(() =>
+                                                           
+                    Task.Factory.StartNew(() =>
                     {
                         vdata.Push(internalCount, realValues, realSize);
+                        NeedRedraw?.Invoke(this);
                     });
 
                     //pushing.
@@ -526,9 +519,9 @@ namespace DXTesting
 
                     int realSize = size / 3;
 
-                    Single[] timeValues = new Single[realSize];
-                    Single[] realValues = new Single[realSize];
-                    Single[] errors = new Single[realSize];
+                    float[] timeValues = new float[realSize];
+                    float[] realValues = new float[realSize];
+                    float[] errors = new float[realSize];
 
                     for (int j = 0; j < realValues.Length; j++)
                     {
@@ -577,7 +570,37 @@ namespace DXTesting
             }
         }
 
+        public void SaveAsCSV()
+        {
 
+            var sdir = Settings.getInstance().SaveDir + "\\";
+
+            var fname = sdir + "flow" + PortNum + ".csv";
+
+            using (var csv = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
+            using (var writer = new StreamWriter(csv))
+            {
+                var header  = "\"Иксы\";\"Игреки\" \r\n";
+                writer.WriteLine(header);
+
+                for (int i = 0; i < rdata.X.Length; i++)
+                {
+                    var line = string.Format("\"{0}\";\"{1}\"\r\n", rdata.X[i], rdata.Y[i]);
+                    writer.WriteLine(line);
+                }
+
+                writer.Close();
+                csv.Close();
+
+            }
+
+
+
+
+
+
+
+        }
 
     }
     class Connectionz
@@ -658,7 +681,100 @@ namespace DXTesting
                 cons[6].grabbing,
                 cons[7].grabbing,
             });
-           
+
+
+            float[] startTimes = new float[8];
+            int[] startCounts = new int[8];
+            int[] endCounts = new int[8];
+            int[] lens = new int[8];
+
+            for (int i = 0; i < Count; i++)
+            {
+                var fname = cons[i].filename;
+                var fs = new FileStream(fname, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var fReader = new BinaryReader(fs);
+                lens[i] = (int)fs.Length / 12;
+
+                startTimes[i] = fReader.ReadSingle();
+                var s1 = fReader.ReadSingle();
+                var s2 = fReader.ReadSingle();
+
+                fReader.Close();
+                fs.Close();
+
+            }
+
+            float min = 0f;
+
+            for (int i = 0; i < Count; i++)
+            {
+                if (startTimes[i] > min)
+                    min = startTimes[i];
+            }
+
+            //MessageBox.Show(min.ToString());
+
+            for (int i = 0; i < Count; i++)
+            {
+                //MessageBox.Show(startTimes[i].ToString());
+                startTimes[i] = Math.Abs(startTimes[i] - (float)min);
+                startCounts[i] = (int)Math.Floor((double)startTimes[i] / 4d);
+
+                //MessageBox.Show(startCounts[i].ToString());
+            }
+
+            min = lens[0] - startTimes[0];
+
+            for (int i = 1; i < Count; i++)
+            {
+                if (lens[i] - startTimes[i] < min)
+                {
+                    min = lens[i] - startTimes[i];
+                }
+            }
+
+            for (int i = 0; i < Count; i++)
+            {
+                var fname = cons[i].filename;
+                var fs = new FileStream(fname, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var fReader = new BinaryReader(fs);
+                var n = (int)fs.Length / 12;
+
+                var someData = new RealData(n);
+
+                var j = 0;
+
+                while (fs.Position != fs.Length)
+                {
+                    var jjj = fReader.ReadSingle();
+                    someData.X[j] = fReader.ReadSingle();
+                    someData.Y[j] = fReader.ReadSingle();
+
+                    j++;
+                }
+
+                fReader.Close();
+                fs.Close();
+
+
+                fs = new FileStream(fname, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+                var bw = new BinaryWriter(fs);
+
+                for (int k = 0; k < min; k++)
+                {
+                    var package = new byte[4 * 2];
+
+                    Buffer.BlockCopy(new float[] { someData.X[k], someData.Y[k] }, 0, package, 0, 8);
+                    bw.Write(package);
+                }
+
+                bw.Close();
+                fs.Close();
+
+
+            }
+
+
             for (int i = 0; i < Count; i++)
             {
                 cons[i].PrepareForView();
@@ -676,6 +792,29 @@ namespace DXTesting
 
                 SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
 
+        }
+
+        public void SaveAll(string format)
+        {
+            switch (format)
+            {
+                case "csv":
+                    for (int i = 0; i < Count; i++)
+                    {
+                        cons[i].SaveAsCSV();
+                    }
+                    break;
+
+                case "txt":
+                    for (int i = 0; i < Count; i++)
+                    {
+                        cons[i].SaveAsCSV();
+                    }
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         public void ConnectAll()

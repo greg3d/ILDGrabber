@@ -112,11 +112,11 @@ namespace DXTesting
             EndD3D();
         }
 
-
+        
         private void RenderOnce()
         {
 
-            System.Windows.Media.CompositionTarget.Rendering += OnRendering2;
+            //System.Windows.Media.CompositionTarget.Rendering += OnRendering2;
             //renderTimer.Start();
         }
 
@@ -134,7 +134,7 @@ namespace DXTesting
 
             lastRenderTime = renderTimer.ElapsedMilliseconds;
         }
-
+        /*
         private void OnRendering2(object sender, EventArgs e)
         {
             //Console.WriteLine("Func");
@@ -148,13 +148,13 @@ namespace DXTesting
 
 
             System.Windows.Media.CompositionTarget.Rendering -= OnRendering2;
-        }
-
+        }*/
+        
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             CreateAndBindTargets();
             base.OnRenderSizeChanged(sizeInfo);
-            RenderOnce();
+            // RenderOnce();
         }
 
         private void OnIsFrontBufferAvailableChanged(object sender, DependencyPropertyChangedEventArgs e)

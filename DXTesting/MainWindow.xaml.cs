@@ -1,6 +1,8 @@
 ﻿using DXTesting.ViewModels;
+using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Shapes;
 
 namespace DXTesting
@@ -8,18 +10,54 @@ namespace DXTesting
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
+    /// 
+
+    public enum SaveFormat { txt, csv, bin }
+
     public partial class MainWindow : Window
     {
+        public class EnumBooleanConverter : IValueConverter
+        {
+            #region IValueConverter Members
+            public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                string parameterString = parameter as string;
+                if (parameterString == null)
+                    return DependencyProperty.UnsetValue;
+
+                if (Enum.IsDefined(value.GetType(), value) == false)
+                    return DependencyProperty.UnsetValue;
+
+                object parameterValue = Enum.Parse(value.GetType(), parameterString);
+
+                return parameterValue.Equals(value);
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                string parameterString = parameter as string;
+                if (parameterString == null)
+                    return DependencyProperty.UnsetValue;
+
+                return Enum.Parse(targetType, parameterString);
+            }
+            #endregion
+        }
 
         private Ellipse[] indicators;
+
         private Point startPoint = new Point();
         private Point endPoint = new Point();
+        private SaveFormat sformat;
+
+        
 
         public MainWindow()
         {
+            this.Resources["enumToBoolConverter"] = new EnumBooleanConverter();
 
             InitializeComponent();
-            this.DataContext = new MainWindowViewModel();
+            this.DataContext = new MainWindowViewModel();            
 
             //Connectionz cons = Connectionz.getInstance(1);
 
@@ -37,6 +75,11 @@ namespace DXTesting
                 cons.cons[i].Notify += SetConnIndicator;
             }
 
+            for (int i = 0; i < cons.cons.Length; i++)
+            {
+                cons.cons[i].NeedRedraw += DoRedrawHandler;
+            }
+
             indicators = new Ellipse[8];
 
             indicators[0] = EStatus1;
@@ -48,6 +91,11 @@ namespace DXTesting
             indicators[6] = EStatus7;
             indicators[7] = EStatus8;
 
+        }
+
+        private void DoRedrawHandler(object sender)
+        {
+            chartControl1.DoRedraw = true;
         }
 
         private void ButtonsDisabling(object sender, ConzEventArgs e)
@@ -146,6 +194,7 @@ namespace DXTesting
                 chartControl1.AutoYzoom = false;
                 startPoint = e.GetPosition(chartControl1);
                 chartControl1.CaptureMouse();
+                chartControl1.DoRedraw = true;
             }
 
             
@@ -160,6 +209,16 @@ namespace DXTesting
             {
                 endPoint = e.GetPosition(chartControl1);
                    
+            } else
+            {
+                if (chartControl1.IsPostProc)
+                {
+                    endPoint = e.GetPosition(chartControl1);
+                    chartControl1.DrawCursor((int)endPoint.X);
+                    chartControl1.DoRedraw = true;
+                }
+                    
+                
             }
         }
 
@@ -177,9 +236,53 @@ namespace DXTesting
 
 
                 chartControl1.ReleaseMouseCapture();
+                chartControl1.DoRedraw = true;
             }
         }
 
+        private void button_Click(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+        private void chartControl1_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            chartControl1.DrawCursor(-1);
+            chartControl1.DoRedraw = true;
+        }
+
+        private void buttonYPlus_Click(object sender, RoutedEventArgs e)
+        {
+            if (chartControl1.IsPostProc)
+            {
+
+                var xx = chartControl1.yMax - chartControl1.yMin;
+
+                chartControl1.yMin = chartControl1.yMin + xx/20;
+                chartControl1.yMax = chartControl1.yMax - xx/20;
+
+                chartControl1.DoRedraw = true;
+            }
+        }
+
+        private void buttonYMinus_Click(object sender, RoutedEventArgs e)
+        {
+            if (chartControl1.IsPostProc)
+            {
+
+                var xx = chartControl1.yMax - chartControl1.yMin;
+
+                chartControl1.yMin = chartControl1.yMin - xx / 20;
+                chartControl1.yMax = chartControl1.yMax + xx / 20;
+
+                chartControl1.DoRedraw = true;
+            }
+        }
+
+        private void SaveDataToFile_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
 }

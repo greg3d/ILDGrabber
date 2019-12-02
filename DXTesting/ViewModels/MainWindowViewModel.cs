@@ -1,5 +1,11 @@
-﻿namespace DXTesting.ViewModels
+﻿
+using System.Windows;
+using System.Windows.Input;
+
+namespace DXTesting.ViewModels
 {
+
+
     class MainWindowViewModel : BaseViewModel
     {
 
@@ -33,12 +39,23 @@
             }
         }
 
+        private SaveFormat currentFormat;
+        public SaveFormat CurrentFormat
+        {
+            get { return currentFormat; }
+            set { 
+                currentFormat = value;
+                OnPropertyChanged("CurrentFormat");
+            }
+        }
+
         public MainWindowViewModel()
         {
-
             SaveDir = settings.SaveDir;
             Demo = settings.Demo;
+            CurrentFormat = SaveFormat.csv;
         }
+
 
 
     }
