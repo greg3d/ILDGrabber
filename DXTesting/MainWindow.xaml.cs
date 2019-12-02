@@ -1,8 +1,9 @@
-﻿using DXTesting.ViewModels;
+﻿//using DXTesting.ViewModels;
 using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Shapes;
 
 namespace DXTesting
@@ -10,9 +11,49 @@ namespace DXTesting
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-    /// 
 
     public enum SaveFormat { txt, csv, bin }
+
+    public class RelayCommand: ICommand
+    {
+        
+        Action<object> _execteMethod;
+        Func<object, bool> _canexecuteMethod;
+
+        public RelayCommand(Action<object> execteMethod, Func<object, bool> canexecuteMethod)
+        {
+            _execteMethod = execteMethod;
+            _canexecuteMethod = canexecuteMethod;
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            if (_canexecuteMethod != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public event EventHandler CanExecuteChanged {
+            add
+            {
+                CommandManager.RequerySuggested += value;
+            }
+            remove
+            {
+                CommandManager.RequerySuggested -= value;
+            }
+        }
+
+        public void Execute(object parameter)
+        {
+            _execteMethod(parameter);  
+        }
+    }
 
     public partial class MainWindow : Window
     {
@@ -49,8 +90,6 @@ namespace DXTesting
         private Point startPoint = new Point();
         private Point endPoint = new Point();
         private SaveFormat sformat;
-
-        
 
         public MainWindow()
         {
@@ -279,10 +318,6 @@ namespace DXTesting
             }
         }
 
-        private void SaveDataToFile_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 
 }

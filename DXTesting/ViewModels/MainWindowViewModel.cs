@@ -1,18 +1,19 @@
 ﻿
+using System;
 using System.Windows;
 using System.Windows.Input;
 
-namespace DXTesting.ViewModels
+namespace DXTesting
 {
-
 
     class MainWindowViewModel : BaseViewModel
     {
 
         private string _saveDir;
         private bool _demo;
+        private SaveFormat _currentFormat;
 
-        Settings settings = Settings.getInstance();
+        private Settings settings = Settings.getInstance();
 
         public string SaveDir
         {
@@ -39,23 +40,44 @@ namespace DXTesting.ViewModels
             }
         }
 
-        private SaveFormat currentFormat;
+        
         public SaveFormat CurrentFormat
         {
-            get { return currentFormat; }
+            get { return _currentFormat; }
             set { 
-                currentFormat = value;
+                _currentFormat = value;
                 OnPropertyChanged("CurrentFormat");
             }
         }
+
+        public ICommand SaveToFileCommand { get; set; }
 
         public MainWindowViewModel()
         {
             SaveDir = settings.SaveDir;
             Demo = settings.Demo;
             CurrentFormat = SaveFormat.csv;
+
+            SaveToFileCommand = new RelayCommand(SaveToFileMethod, CanExecuteMyMethod);
+        }
+        
+        private bool CanExecuteMyMethod(object parameter)
+        {
+            if (Enum.IsDefined(typeof(SaveFormat), CurrentFormat))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
+        private void SaveToFileMethod(object parameter)
+        {
+            Connectionz c = Connectionz.getInstance();
+            c.SaveAll(CurrentFormat.ToString());
+        }
 
 
     }

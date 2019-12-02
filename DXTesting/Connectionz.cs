@@ -462,7 +462,7 @@ namespace DXTesting
 
                         ticks++;
 
-                        float val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 1024f)) * 25 + PortNum-4000;
+                        float val = (float)Math.Sin(2f * 3.14f * ((float)ticks / 1024f)) * 25 + PortNum - 4000;
 
                         float tt = ticks / 250f;
                         internalCount[j] = tt;
@@ -572,34 +572,51 @@ namespace DXTesting
 
         public void SaveAsCSV()
         {
-
+            
             var sdir = Settings.getInstance().SaveDir + "\\";
 
             var fname = sdir + "flow" + PortNum + ".csv";
 
-            using (var csv = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
-            using (var writer = new StreamWriter(csv))
+            
+            using (var csv = new FileStream(fname, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
+            using (var writer = new StreamWriter(csv,Encoding.UTF8))
             {
-                var header  = "\"Иксы\";\"Игреки\" \r\n";
-                writer.WriteLine(header);
+                var header = "\"Иксы\";\"Игреки\"\r\n";
+                writer.Write(header);
 
                 for (int i = 0; i < rdata.X.Length; i++)
                 {
                     var line = string.Format("\"{0}\";\"{1}\"\r\n", rdata.X[i], rdata.Y[i]);
-                    writer.WriteLine(line);
+                    writer.Write(line);
                 }
 
-                writer.Close();
-                csv.Close();
-
+                //writer.Close();
+                //csv.Close();
             }
+        }
 
+        public void SaveAsTXT()
+        {
 
+            var sdir = Settings.getInstance().SaveDir + "\\";
 
+            var fname = sdir + "flow" + PortNum + ".txt";
 
+            using (var csv = new FileStream(fname, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
+            using (var writer = new StreamWriter(csv, Encoding.UTF8))
+            {
+                var header = "\"Иксы\"\t\"Игреки\"\r\n";
+                writer.Write(header);
 
+                for (int i = 0; i < rdata.X.Length; i++)
+                {
+                    var line = string.Format("\"{0}\"\t\"{1}\"\r\n", rdata.X[i], rdata.Y[i]);
+                    writer.Write(line);
+                }
 
-
+                //writer.Close();
+                //csv.Close();
+            }
         }
 
     }
@@ -796,25 +813,34 @@ namespace DXTesting
 
         public void SaveAll(string format)
         {
+
+            //MessageBox.Show("Сохраняем в формате... " + format);
+
             switch (format)
             {
                 case "csv":
+                    
                     for (int i = 0; i < Count; i++)
                     {
                         cons[i].SaveAsCSV();
                     }
+                    MessageBox.Show("Сохранено в CSV!");
                     break;
 
                 case "txt":
                     for (int i = 0; i < Count; i++)
                     {
-                        cons[i].SaveAsCSV();
+                        cons[i].SaveAsTXT();
                     }
+                    MessageBox.Show("Сохранено в TXT!");
                     break;
 
                 default:
+                    MessageBox.Show("В демоверсии нельзя сохранять в Binary");
                     break;
             }
+
+           
         }
 
         public void ConnectAll()

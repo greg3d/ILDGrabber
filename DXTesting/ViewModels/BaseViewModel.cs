@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace DXTesting.ViewModels
+namespace DXTesting
 {
     public class BaseViewModel : INotifyPropertyChanged
     {
