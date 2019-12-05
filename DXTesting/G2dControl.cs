@@ -112,7 +112,7 @@ namespace DXTesting
             EndD3D();
         }
 
-        
+
         private void RenderOnce()
         {
 
@@ -149,7 +149,7 @@ namespace DXTesting
 
             System.Windows.Media.CompositionTarget.Rendering -= OnRendering2;
         }*/
-        
+
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             CreateAndBindTargets();

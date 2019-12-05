@@ -50,7 +50,7 @@
         private Settings()
         {
             _demo = true;
-            _saveDir =  @"C:\Results";
+            _saveDir = @"C:\Results";
             _fs = 250;
         }
 

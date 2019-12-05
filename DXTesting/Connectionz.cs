@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 
 namespace DXTesting
 
@@ -21,7 +20,7 @@ namespace DXTesting
 
         public ViewData()
         {
-            
+
             X = new float[5000];
             Y = new float[5000];
             temp1 = new float[5000];
@@ -355,7 +354,7 @@ namespace DXTesting
         {
             IsPostProc = false;
             vdata = new ViewData();
-            
+
             tf = new TaskFactory(
                 TaskCreationOptions.LongRunning,
                 TaskContinuationOptions.LongRunning
@@ -365,10 +364,10 @@ namespace DXTesting
 
             grabbing = tf.StartNew(DemoGrabbingTask);
             //Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
-            
+
         }
 
-        
+
         public void StopGrab()
         {
             GrabTrigger = false;
@@ -380,7 +379,7 @@ namespace DXTesting
             if (demoMode)
             {
 
-            } 
+            }
             else
             {
                 stream.Write(outputnone, 0, outputnone.Length);
@@ -403,7 +402,7 @@ namespace DXTesting
 
         public void PrepareForView()
         {
-            
+
             IsGrabbing = false;
 
             fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -424,7 +423,7 @@ namespace DXTesting
                 i++;
 
             }
-            
+
             fReader.Close();
             fs.Close();
 
@@ -434,7 +433,7 @@ namespace DXTesting
             NeedRedraw?.Invoke(this);
 
         }
-    
+
         private void DemoGrabbingTask()
         {
             if (IsReady && IsConnected)
@@ -474,9 +473,9 @@ namespace DXTesting
 
                         Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
                         FileWriter.Write(package);
-                        
+
                     }
-                                                           
+
                     Task.Factory.StartNew(() =>
                     {
                         vdata.Push(internalCount, realValues, realSize);
@@ -484,7 +483,7 @@ namespace DXTesting
                     });
 
                     //pushing.
-                    
+
 
                     Thread.Sleep(100);
 
@@ -572,14 +571,14 @@ namespace DXTesting
 
         public void SaveAsCSV()
         {
-            
+
             var sdir = Settings.getInstance().SaveDir + "\\";
 
             var fname = sdir + "flow" + PortNum + ".csv";
 
-            
+
             using (var csv = new FileStream(fname, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
-            using (var writer = new StreamWriter(csv,Encoding.UTF8))
+            using (var writer = new StreamWriter(csv, Encoding.UTF8))
             {
                 var header = "\"Иксы\";\"Игреки\"\r\n";
                 writer.Write(header);
@@ -802,12 +801,12 @@ namespace DXTesting
         public void ConnectAllTask()
         {
 
-                for (int i = 0; i < Count; i++)
-                {
-                    cons[i].Connect(ports[i]);
-                }
+            for (int i = 0; i < Count; i++)
+            {
+                cons[i].Connect(ports[i]);
+            }
 
-                SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
+            SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
 
         }
 
@@ -819,7 +818,7 @@ namespace DXTesting
             switch (format)
             {
                 case "csv":
-                    
+
                     for (int i = 0; i < Count; i++)
                     {
                         cons[i].SaveAsCSV();
@@ -840,18 +839,18 @@ namespace DXTesting
                     break;
             }
 
-           
+
         }
 
         public void ConnectAll()
         {
-            
-                Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
-                conThread.Name = "Connections thread";
-                conThread.IsBackground = true;
-                conThread.SetApartmentState(ApartmentState.STA);
 
-                conThread.Start();
+            Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
+            conThread.Name = "Connections thread";
+            conThread.IsBackground = true;
+            conThread.SetApartmentState(ApartmentState.STA);
+
+            conThread.Start();
 
 
         }

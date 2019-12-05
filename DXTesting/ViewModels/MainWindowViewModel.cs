@@ -1,6 +1,5 @@
 ﻿
 using System;
-using System.Windows;
 using System.Windows.Input;
 
 namespace DXTesting
@@ -40,11 +39,12 @@ namespace DXTesting
             }
         }
 
-        
+
         public SaveFormat CurrentFormat
         {
             get { return _currentFormat; }
-            set { 
+            set
+            {
                 _currentFormat = value;
                 OnPropertyChanged("CurrentFormat");
             }
@@ -60,7 +60,7 @@ namespace DXTesting
 
             SaveToFileCommand = new RelayCommand(SaveToFileMethod, CanExecuteMyMethod);
         }
-        
+
         private bool CanExecuteMyMethod(object parameter)
         {
             if (Enum.IsDefined(typeof(SaveFormat), CurrentFormat))

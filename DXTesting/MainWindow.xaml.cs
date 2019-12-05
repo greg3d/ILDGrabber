@@ -14,9 +14,9 @@ namespace DXTesting
 
     public enum SaveFormat { txt, csv, bin }
 
-    public class RelayCommand: ICommand
+    public class RelayCommand : ICommand
     {
-        
+
         Action<object> _execteMethod;
         Func<object, bool> _canexecuteMethod;
 
@@ -38,7 +38,8 @@ namespace DXTesting
             }
         }
 
-        public event EventHandler CanExecuteChanged {
+        public event EventHandler CanExecuteChanged
+        {
             add
             {
                 CommandManager.RequerySuggested += value;
@@ -51,7 +52,7 @@ namespace DXTesting
 
         public void Execute(object parameter)
         {
-            _execteMethod(parameter);  
+            _execteMethod(parameter);
         }
     }
 
@@ -88,15 +89,18 @@ namespace DXTesting
         private Ellipse[] indicators;
 
         private Point startPoint = new Point();
+        private Point superStartPoint = new Point();
         private Point endPoint = new Point();
-        private SaveFormat sformat;
+
+        int mouseMode = 0;
+
 
         public MainWindow()
         {
             this.Resources["enumToBoolConverter"] = new EnumBooleanConverter();
 
             InitializeComponent();
-            this.DataContext = new MainWindowViewModel();            
+            this.DataContext = new MainWindowViewModel();
 
             //Connectionz cons = Connectionz.getInstance(1);
 
@@ -230,13 +234,16 @@ namespace DXTesting
         {
             if (chartControl1.IsPostProc)
             {
+
+                mouseMode = 1;
+
                 chartControl1.AutoYzoom = false;
                 startPoint = e.GetPosition(chartControl1);
                 chartControl1.CaptureMouse();
                 chartControl1.DoRedraw = true;
             }
 
-            
+
 
 
             //chartControl1.
@@ -246,9 +253,48 @@ namespace DXTesting
         {
             if (chartControl1.IsMouseCaptured)
             {
-                endPoint = e.GetPosition(chartControl1);
-                   
-            } else
+                if (mouseMode == 1)
+                {
+                    endPoint = e.GetPosition(chartControl1);
+
+                    var w = chartControl1.ActualWidth;
+                    var k = (chartControl1.xMax - chartControl1.xMin) / w;
+                    chartControl1.xMin = (float)(chartControl1.xMin - k * (endPoint.X - startPoint.X));
+                    chartControl1.xMax = (float)(chartControl1.xMax - k * (endPoint.X - startPoint.X));
+                    chartControl1.DoRedraw = true;
+
+                    startPoint = e.GetPosition(chartControl1);
+                }
+
+                if (mouseMode == 2)
+                {
+                    endPoint = e.GetPosition(chartControl1);
+
+
+                    foreach (var plot in chartControl1.plotList)
+                    {
+                        if (superStartPoint.Y < plot.y2 && superStartPoint.Y > plot.y1)
+                        {
+                            var w = plot.y2- plot.y1;
+                            var k = (plot.yMax - plot.yMin) / w;
+
+                            plot.yMin = (float)(plot.yMin + k * (endPoint.Y - startPoint.Y));
+                            plot.yMax = (float)(plot.yMax + k * (endPoint.Y - startPoint.Y));
+
+
+                            chartControl1.DoRedraw = true;
+                        }
+                    }
+
+                    
+
+                    startPoint = e.GetPosition(chartControl1);
+                }
+
+
+            }
+            
+            else
             {
                 if (chartControl1.IsPostProc)
                 {
@@ -256,8 +302,7 @@ namespace DXTesting
                     chartControl1.DrawCursor((int)endPoint.X);
                     chartControl1.DoRedraw = true;
                 }
-                    
-                
+
             }
         }
 
@@ -266,22 +311,16 @@ namespace DXTesting
 
             if (chartControl1.IsMouseCaptured)
             {
-                endPoint = e.GetPosition(chartControl1);
 
-                var w = chartControl1.ActualWidth;
-                var k = (chartControl1.xMax - chartControl1.xMin) / w;
-                chartControl1.xMin = (float)(chartControl1.xMin - k * (endPoint.X - startPoint.X));
-                chartControl1.xMax = (float)(chartControl1.xMax - k * (endPoint.X - startPoint.X));
-
-
+                mouseMode = 0;
                 chartControl1.ReleaseMouseCapture();
-                chartControl1.DoRedraw = true;
+
             }
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            
+
         }
 
         private void chartControl1_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
@@ -294,12 +333,7 @@ namespace DXTesting
         {
             if (chartControl1.IsPostProc)
             {
-
-                var xx = chartControl1.yMax - chartControl1.yMin;
-
-                chartControl1.yMin = chartControl1.yMin + xx/20;
-                chartControl1.yMax = chartControl1.yMax - xx/20;
-
+                chartControl1.ScaleY(1);
                 chartControl1.DoRedraw = true;
             }
         }
@@ -309,15 +343,56 @@ namespace DXTesting
             if (chartControl1.IsPostProc)
             {
 
-                var xx = chartControl1.yMax - chartControl1.yMin;
-
-                chartControl1.yMin = chartControl1.yMin - xx / 20;
-                chartControl1.yMax = chartControl1.yMax + xx / 20;
-
+                chartControl1.ScaleY(-1);
                 chartControl1.DoRedraw = true;
             }
         }
 
+        private void buttonXPlus_Click(object sender, RoutedEventArgs e)
+        {
+            if (chartControl1.IsPostProc)
+            {
+
+                chartControl1.ScaleX(1);
+                chartControl1.DoRedraw = true;
+            }
+        }
+
+        private void buttonXMinus_Click(object sender, RoutedEventArgs e)
+        {
+            if (chartControl1.IsPostProc)
+            {
+
+                chartControl1.ScaleX(-1);
+                chartControl1.DoRedraw = true;
+            }
+        }
+
+        private void chartControl1_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (chartControl1.IsPostProc)
+            {
+
+                mouseMode = 2;
+
+                chartControl1.AutoYzoom = false;
+                
+                startPoint = e.GetPosition(chartControl1);
+                superStartPoint = e.GetPosition(chartControl1);
+                chartControl1.CaptureMouse();
+            }
+        }
+
+        private void chartControl1_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (chartControl1.IsMouseCaptured)
+            {
+
+                mouseMode = 0;
+                chartControl1.ReleaseMouseCapture();
+
+            }
+        }
     }
 
 }
