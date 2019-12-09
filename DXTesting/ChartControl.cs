@@ -2,7 +2,6 @@
 using SharpDX.DirectWrite;
 using SharpDX.Mathematics.Interop;
 using System;
-using System.Diagnostics;
 
 namespace DXTesting
 {
@@ -20,7 +19,8 @@ namespace DXTesting
         //public int Index;
         //public bool visible;
 
-        public Plot() {
+        public Plot()
+        {
             x1 = 0;
             x2 = 0;
             y1 = 0;
@@ -53,7 +53,7 @@ namespace DXTesting
         float marginRight = 40;
 
         float plotHeight = 100;
- 
+
         public float xMin = 0f;
         public float xMax = 300;
         public float yMax = -1e9f;
@@ -160,7 +160,7 @@ namespace DXTesting
 
         public void ScaleY(int sign)
         {
-                        
+
             foreach (var item in plotList)
             {
                 if (sign > 0)
@@ -169,16 +169,17 @@ namespace DXTesting
 
                     item.yMin = item.yMin + xx / 20;
                     item.yMax = item.yMax - xx / 20;
-                } else
+                }
+                else
                 {
                     var xx = item.yMax - item.yMin;
 
                     item.yMin = item.yMin - xx / 20;
                     item.yMax = item.yMax + xx / 20;
                 }
-                
+
             }
-          
+
         }
 
         public void ScaleX(int sign)
@@ -186,22 +187,22 @@ namespace DXTesting
 
             //foreach (var item in plotList)
             //{
-                if (sign > 0)
-                {
-                    var xx = xMax - xMin;
+            if (sign > 0)
+            {
+                var xx = xMax - xMin;
 
-                    xMin = xMin + xx / 20;
-                    xMax = xMax - xx / 20;
-                }
-                else
-                {
+                xMin = xMin + xx / 20;
+                xMax = xMax - xx / 20;
+            }
+            else
+            {
                 var xx = xMax - xMin;
 
                 xMin = xMin - xx / 20;
                 xMax = xMax + xx / 20;
             }
 
-           // }
+            // }
 
         }
 
@@ -227,7 +228,9 @@ namespace DXTesting
                 }
             }
             if (Math.Abs(original - 10 * mn * multiplier) < Math.Abs(original - spacing))
+            {
                 spacing = 10 * mn * multiplier;
+            }
 
             return (float)spacing;
         }
@@ -269,7 +272,7 @@ namespace DXTesting
 
                 xMax = curPlot.xMax;
                 xMin = curPlot.xMin;
-            } 
+            }
             else
             {
                 curPlot.xMin = xMin;
@@ -311,9 +314,8 @@ namespace DXTesting
 
             Connectionz conz = Connectionz.getInstance();
 
-            if (conz.Count > 0 && DoRedraw)
+            if (conz.ReadyCount > 0 && DoRedraw)
             {
-
                 //int ind = 0;
                 IsGrabbing = true;
                 IsPostProc = true;
@@ -336,7 +338,7 @@ namespace DXTesting
                     {
                         plotList[gg] = new Plot();
                     }
-                        
+
                     oldVisibleCount = visibleCount;
                 }
 
@@ -348,7 +350,7 @@ namespace DXTesting
                 {
                     if (con.IsReady && (IsGrabbing ^ IsPostProc))
                     {
-                        
+
                         var curPlot = plotList[i];
 
                         curPlot.x1 = xx + marginLeft;
@@ -363,12 +365,12 @@ namespace DXTesting
                         {
                             autoYzoom = true;
                             DoAutoScale(ref con.vdata.X, ref con.vdata.Y, ref curPlot, autoYzoom);
-        
+
                             // расстояние между тиками по X = 5 сек
                             int tickGap = 5; //sec
 
-                            
-                                             //var tnum = xMax / tickGap;
+
+                            //var tnum = xMax / tickGap;
                             float xStart = (float)Math.Ceiling(xMin / tickGap) * tickGap;
                             float xEnd = (float)Math.Floor(xMax / tickGap) * tickGap;
 
@@ -394,7 +396,7 @@ namespace DXTesting
 
                             for (var k = -20; k < 25; k = k + 10)
                             {
-                                RawVector2 tickPoint = PointToCanvas(curPlot, con.vdata.X[(int)nPoints - 1], (float)k);
+                                RawVector2 tickPoint = PointToCanvas(curPlot, con.vdata.X[(int)nPoints - 1], k);
                                 RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
                                 RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
 
@@ -434,7 +436,7 @@ namespace DXTesting
 
                         if (IsPostProc)
                         {
-                            
+
                             var data = con.rdata;
 
                             DoAutoScale(ref data.X, ref data.Y, ref curPlot, autoYzoom);
@@ -451,15 +453,15 @@ namespace DXTesting
 
                             // расстояние между тиками по X
                             float tickGap = 5; //sec
-                            
-                            var xScale = ( curPlot.x2 - curPlot.x1 ) / (curPlot.xMax - curPlot.xMin);
+
+                            var xScale = (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin);
                             var xSpacing = 80 / xScale;
 
                             tickGap = OptimalSpacing(xSpacing);
 
-                            float xStart = (float)Math.Ceiling(curPlot.xMin / tickGap) * tickGap; 
-                            float xEnd = (float)Math.Floor(curPlot.xMax / tickGap) * tickGap; 
-                            
+                            float xStart = (float)Math.Ceiling(curPlot.xMin / tickGap) * tickGap;
+                            float xEnd = (float)Math.Floor(curPlot.xMax / tickGap) * tickGap;
+
                             labelTextFormat.TextAlignment = TextAlignment.Center;
                             labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
 

@@ -79,6 +79,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Connection.cs" />
     <Compile Include="Connectionz.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="ResourceCache.cs" />

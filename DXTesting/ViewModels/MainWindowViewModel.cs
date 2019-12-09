@@ -19,7 +19,11 @@ namespace DXTesting
             get { return _saveDir; }
             set
             {
-                if (value == _saveDir) return;
+                if (value == _saveDir)
+                {
+                    return;
+                }
+
                 _saveDir = value;
                 settings.SaveDir = value;
                 OnPropertyChanged("SaveDir");
@@ -31,7 +35,11 @@ namespace DXTesting
             get { return _demo; }
             set
             {
-                if (!(value ^ _demo)) return;
+                if (!(value ^ _demo))
+                {
+                    return;
+                }
+
                 _demo = value;
                 settings.Demo = value;
 

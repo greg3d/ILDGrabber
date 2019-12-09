@@ -12,7 +12,6 @@ namespace DXTesting
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
 
-    public enum SaveFormat { txt, csv, bin }
 
     public class RelayCommand : ICommand
     {
@@ -65,10 +64,14 @@ namespace DXTesting
             {
                 string parameterString = parameter as string;
                 if (parameterString == null)
+                {
                     return DependencyProperty.UnsetValue;
+                }
 
                 if (Enum.IsDefined(value.GetType(), value) == false)
+                {
                     return DependencyProperty.UnsetValue;
+                }
 
                 object parameterValue = Enum.Parse(value.GetType(), parameterString);
 
@@ -79,7 +82,9 @@ namespace DXTesting
             {
                 string parameterString = parameter as string;
                 if (parameterString == null)
+                {
                     return DependencyProperty.UnsetValue;
+                }
 
                 return Enum.Parse(targetType, parameterString);
             }
@@ -271,7 +276,7 @@ namespace DXTesting
                     {
                         if (superStartPoint.Y < plot.y2 && superStartPoint.Y > plot.y1)
                         {
-                            var w = plot.y2- plot.y1;
+                            var w = plot.y2 - plot.y1;
                             var k = (plot.yMax - plot.yMin) / w;
 
                             plot.yMin = (float)(plot.yMin + k * (endPoint.Y - startPoint.Y));
@@ -282,14 +287,14 @@ namespace DXTesting
                         }
                     }
 
-                    
+
 
                     startPoint = e.GetPosition(chartControl1);
                 }
 
 
             }
-            
+
             else
             {
                 if (chartControl1.IsPostProc)
@@ -372,7 +377,7 @@ namespace DXTesting
                 mouseMode = 2;
 
                 chartControl1.AutoYzoom = false;
-                
+
                 startPoint = e.GetPosition(chartControl1);
                 superStartPoint = e.GetPosition(chartControl1);
                 chartControl1.CaptureMouse();

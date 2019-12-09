@@ -1,5 +1,9 @@
 ﻿namespace DXTesting
 {
+    // setting enums
+    public enum SaveFormat { txt, csv, bin }
+    public enum MeasRate : int { rate250Hz = 250, rate500Hz = 500, rate1000Hz = 1000, rate2000Hz = 2000 }
+
     class Settings
     {
 
@@ -8,9 +12,9 @@
         // поля
         private bool _demo;
         private string _saveDir;
-        private int _fs;
+        private MeasRate _fs;
 
-        public int Fs
+        public MeasRate Fs
         {
             get
             {
@@ -51,13 +55,16 @@
         {
             _demo = true;
             _saveDir = @"C:\Results";
-            _fs = 250;
+            _fs = MeasRate.rate250Hz;
         }
 
         public static Settings getInstance()
         {
             if (instance == null)
+            {
                 instance = new Settings();
+            }
+
             return instance;
         }
 
