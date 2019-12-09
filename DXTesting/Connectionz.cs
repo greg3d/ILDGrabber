@@ -362,7 +362,15 @@ namespace DXTesting
             ticks = 0;
             GrabTrigger = true;
 
-            grabbing = tf.StartNew(DemoGrabbingTask);
+            if (demoMode)
+            {
+                grabbing = tf.StartNew(DemoGrabbingTask);
+            }
+            else
+            {
+                grabbing = tf.StartNew(GrabbingTask);
+            }
+            
             //Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
 
         }
@@ -370,8 +378,8 @@ namespace DXTesting
 
         public void StopGrab()
         {
+
             GrabTrigger = false;
-            IsGrabbing = false;
 
             //Thread.Sleep(100);
             //thread.Abort();
@@ -382,18 +390,26 @@ namespace DXTesting
             }
             else
             {
-                stream.Write(outputnone, 0, outputnone.Length);
-                stream.Write(newLine, 0, newLine.Length);
-                stream.Close();
-                client.Close();
+                    
+                if (IsGrabbing)
+                {
+                    stream?.Write(outputnone, 0, outputnone.Length);
+                    stream?.Write(newLine, 0, newLine.Length);
+                    stream?.Close();
+                    client?.Close();
+                }
+                
             }
 
-            FileWriter.Close();
-            fs.Close();
+            
+            IsGrabbing = false;
+
+            FileWriter?.Close();
+            fs?.Close();
 
 
-            fs.Dispose();
-            FileWriter.Dispose();
+            fs?.Dispose();
+            FileWriter?.Dispose();
             Notify?.Invoke(this, new ConnectionEventArgs("GrabbedSuccess", ConnID));
             NeedRedraw?.Invoke(this);
 
@@ -497,7 +513,7 @@ namespace DXTesting
 
         private void GrabbingTask()
         {
-            if (client.Connected && IsReady)
+            if (IsConnected && IsReady)
             {
 
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
@@ -514,13 +530,20 @@ namespace DXTesting
 
                 do
                 {
+
+                    //int realSize = 48;
+                    DateTime currentDate = DateTime.Now;
+                    float curTick = currentDate.Second * 1000 + currentDate.Millisecond;
+
+                    
+
                     size = stream.Read(data, 0, 96);
 
                     int realSize = size / 3;
 
-                    float[] timeValues = new float[realSize];
+                    float[] internalCount = new float[realSize];
                     float[] realValues = new float[realSize];
-                    float[] errors = new float[realSize];
+                    float[] timeValues = new float[realSize];
 
                     for (int j = 0; j < realValues.Length; j++)
                     {
@@ -531,13 +554,10 @@ namespace DXTesting
                         byte mid = data[j * 3 + 1];
                         byte high = data[j * 3 + 2];
 
-                        float val;
-                        float err;
-
-                        val = (float)(low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + (float)((high & 0b0000_1111) << 12);
+                        float val = (float)(low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + (float)((high & 0b0000_1111) << 12);
                         val = 0.01f * ((102f / 65520f) * val - 1f) * 50f;
 
-                        err = high & 0b0111_0000;
+                        var err = high & 0b0111_0000;
 
                         if (err > 0)
                         {
@@ -545,26 +565,32 @@ namespace DXTesting
                         }
 
                         float tt = (float)ticks / 250f;
-                        timeValues[j] = tt;
-
+                        
+                        internalCount[j] = tt;
                         realValues[j] = val;
+                        timeValues[j] = curTick;
 
-                        errors[j] = err;
+                        var package = new byte[4 * 3];
 
-                        FileWriter.Write(err);
-                        FileWriter.Write(tt);
-                        FileWriter.Write(val);
+                        Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
+                        FileWriter.Write(package);
 
                     }
 
-                    vdata.Push(timeValues, realValues, realSize);
+                    Task.Factory.StartNew(() =>
+                    {
+                        vdata.Push(internalCount, realValues, realSize);
+                        NeedRedraw?.Invoke(this);
+                    });
+
+                    //vdata.Push(timeValues, realValues, realSize);
 
                     Thread.Sleep(100);
 
                     IsGrabbing = true;
 
                 }
-                while (stream.DataAvailable && GrabTrigger); // пока данные есть в потоке
+                while (GrabTrigger); // пока данные есть в потоке
 
             }
         }

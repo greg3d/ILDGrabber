@@ -243,10 +243,6 @@ namespace DXTesting
                 chartControl1.DoRedraw = true;
             }
 
-
-
-
-            //chartControl1.
         }
 
         private void chartControl1_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
