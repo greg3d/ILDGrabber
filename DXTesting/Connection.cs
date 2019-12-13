@@ -73,7 +73,7 @@ namespace DXTesting
             //indicator = indi;
 
             ConnID = id;
-            Rate = mrate;
+            Rate = mrate*1000;
 
             string command = "MEASRATE " + srate;
             measrate = Encoding.ASCII.GetBytes(command);
@@ -398,13 +398,13 @@ namespace DXTesting
 
                         ticks++;
 
-                        float val = (float)Math.Sin(2f * 3.14f * (ticks / 1024f)) * Range + PortNum - 4000;
 
-                        float tt = (float)(ticks / Rate);
-                        internalCount[j] = tt;
+                        float tt = (float)ticks / (float)Rate;
+                        float val = (float)Math.Sin(2f * 3.14f * tt) * Range + PortNum - 4000;
 
+                        internalCount[j] = curTick;
                         realValues[j] = val;
-                        timeValues[j] = curTick;
+                        timeValues[j] = tt;
 
                         var package = new byte[4 * 3];
 
@@ -415,7 +415,7 @@ namespace DXTesting
 
                     Task.Factory.StartNew(() =>
                     {
-                        vdata.Push(internalCount, realValues, realSize);
+                        vdata.Push(timeValues, realValues, realSize);
                         NeedRedraw?.Invoke(this);
                     });
 
@@ -456,8 +456,6 @@ namespace DXTesting
                     DateTime currentDate = DateTime.Now;
                     float curTick = currentDate.Second * 1000 + currentDate.Millisecond;
 
-
-
                     size = stream.Read(data, 0, 96);
 
                     int realSize = size / 3;
@@ -485,11 +483,11 @@ namespace DXTesting
                             val = float.NaN;
                         }
 
-                        float tt = (float)(ticks / Rate);
+                        float tt = (float)ticks / (float)Rate;
 
-                        internalCount[j] = tt;
+                        internalCount[j] = curTick;
                         realValues[j] = val;
-                        timeValues[j] = curTick;
+                        timeValues[j] = tt;
 
                         var package = new byte[4 * 3];
 
@@ -500,7 +498,7 @@ namespace DXTesting
 
                     Task.Factory.StartNew(() =>
                     {
-                        vdata.Push(internalCount, realValues, realSize);
+                        vdata.Push(timeValues, realValues, realSize);
                         NeedRedraw?.Invoke(this);
                     });
 

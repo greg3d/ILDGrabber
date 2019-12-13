@@ -179,16 +179,7 @@ namespace DXTesting
                 cons[i].StopGrab();
             }
 
-            Task.WaitAll(new Task[] {
-                cons[0].grabbing,
-                cons[1].grabbing,
-                cons[2].grabbing,
-                cons[3].grabbing,
-                cons[4].grabbing,
-                cons[5].grabbing,
-                cons[6].grabbing,
-                cons[7].grabbing,
-            });
+            Thread.Sleep(1000);
 
 
             float[] startTimes = new float[ReadyCount];

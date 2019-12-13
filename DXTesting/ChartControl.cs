@@ -158,6 +158,17 @@ namespace DXTesting
             return retVec;
         }
 
+        private RawVector2 PointToCanvasN(Plot curPlot, float x, float y)
+        {
+            RawVector2 retVec = new RawVector2();
+
+
+            retVec.X = curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin);
+            retVec.Y = curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin);
+
+            return retVec;
+        }
+
         public void ScaleY(int sign)
         {
 
@@ -394,15 +405,17 @@ namespace DXTesting
                             labelTextFormat.TextAlignment = TextAlignment.Leading;
                             labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
-                            for (var k = -20; k < 25; k = k + 10)
+                            for (var k = -10; k < 50; k = k + 10)
                             {
-                                RawVector2 tickPoint = PointToCanvas(curPlot, con.vdata.X[(int)nPoints - 1], k);
+                                RawVector2 tickPoint = PointToCanvasN(curPlot, con.vdata.X[(int)nPoints - 1], k);
                                 RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
                                 RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
 
-                                target.DrawLine(point1, point2, transparentBrush);
-
-                                drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                                if ((tickPoint.Y > curPlot.y1) & (tickPoint.Y < curPlot.y2))
+                                {
+                                    target.DrawLine(point1, point2, transparentBrush);
+                                    drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                                }
                             }
 
                             labelTextFormat.TextAlignment = TextAlignment.Leading;
@@ -482,15 +495,17 @@ namespace DXTesting
                             labelTextFormat.TextAlignment = TextAlignment.Leading;
                             labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
-                            for (var k = -20; k < 25; k = k + 10)
+                            for (var k = -10; k < 50; k = k + 10)
                             {
-                                RawVector2 tickPoint = PointToCanvas(curPlot, data.X[N - 1], k);
+                                RawVector2 tickPoint = PointToCanvasN(curPlot, con.vdata.X[(int)nPoints - 1], k);
                                 RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
                                 RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
 
-                                target.DrawLine(point1, point2, transparentBrush);
-
-                                drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                                if ((tickPoint.Y>curPlot.y1)&(tickPoint.Y < curPlot.y2))
+                                {
+                                    target.DrawLine(point1, point2, transparentBrush);
+                                    drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                                }
                             }
 
                             labelTextFormat.TextAlignment = TextAlignment.Leading;
