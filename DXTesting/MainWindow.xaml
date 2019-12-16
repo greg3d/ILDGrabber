@@ -9,7 +9,7 @@
     <Grid Background="#FFEEEEF2" >
         <Grid.RowDefinitions>
             <RowDefinition MaxHeight="48" Height="61"/>
-            <RowDefinition Height="235*"/>
+            <RowDefinition Height="235*" MinHeight="237"/>
             <RowDefinition Height="276*"/>
             <RowDefinition Height="170"/>
             <RowDefinition Height="0*"/>
@@ -29,8 +29,8 @@
                             />
         <Label x:Name="label" Content="{Binding Fps, ElementName=chartControl1 }" Margin="0" Background="LightGray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="2" HorizontalAlignment="Left" Width="23" VerticalAlignment="Center" Padding="0,2,0,3" FontSize="10"/>
         <Button x:Name="ConnectButton" Content="Коннект" Margin="10,0" Click="ConnectButton_Click" BorderThickness="1" Style="{DynamicResource RoundedButton}" Grid.ColumnSpan="2" Grid.Row="1" VerticalAlignment="Top" Height="31" />
-        <Button x:Name="GrabButton" Content="Сбор" Margin="10,78,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}"/>
-        <Button x:Name="StopButton" Content="Стоп" Margin="5,78,10,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>
+        <Button x:Name="GrabButton" Content="Сбор" Margin="10,98,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}" RenderTransformOrigin="0.505,0.518"/>
+        <Button x:Name="StopButton" Content="Стоп" Margin="5,98,10,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>
 
         <Button x:Name="SaveDataToFile" Content="Сохранить" Margin="10,0,10,10" Grid.Row="3" Height="33" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Command="{Binding SaveToFileCommand}" />
         <TextBox Grid.Column="2" HorizontalAlignment="Left" Margin="128,10,0,10" TextWrapping="Wrap" Text="192.168.0.252" Width="103" VerticalContentAlignment="Center" TextAlignment="Center"/>
@@ -57,14 +57,30 @@
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
+            
             <Ellipse x:Name="EStatus1" Grid.Column="0" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="1" FontSize="8" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
             <Ellipse x:Name="EStatus2" Grid.Column="1" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="2" FontSize="8" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
             <Ellipse x:Name="EStatus3" Grid.Column="2" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="3" FontSize="8" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
             <Ellipse x:Name="EStatus4" Grid.Column="3" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="4" FontSize="8" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
             <Ellipse x:Name="EStatus5" Grid.Column="4" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="5" FontSize="8" Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
             <Ellipse x:Name="EStatus6" Grid.Column="5" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="6" FontSize="8" Grid.Column="5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
             <Ellipse x:Name="EStatus7" Grid.Column="6" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="7" FontSize="8" Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
             <Ellipse x:Name="EStatus8" Grid.Column="7" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="8" FontSize="8" Grid.Column="7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Grid.Column="2" HorizontalAlignment="Left" Margin="316,10,0,10" VerticalAlignment="Center" Height="28" Width="188">
             <TextBox x:Name="textBoxSaveDir" Grid.Column="1" Margin="0" TextWrapping="Wrap" VerticalContentAlignment="Center" Text="{Binding Path=SaveDir}" HorizontalAlignment="Left" Width="151" Height="28" VerticalAlignment="Center"/>
@@ -90,6 +106,6 @@
         </Grid>
         <Label x:Name="label3" Content="Статус соединения с датчиками:" Margin="18,31,18,0" Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Width="188"/>
         <Label x:Name="label4" Content="ILD TCP Grabber" Margin="10,0" FontSize="18" FontFamily="Segoe UI Semibold" Grid.ColumnSpan="2" Padding="0" VerticalContentAlignment="Center"/>
-        
+
     </Grid>
 </Window> 

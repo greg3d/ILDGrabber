@@ -3,9 +3,11 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
+//using System.Windows;
+using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace DXTesting
 
@@ -159,6 +161,24 @@ namespace DXTesting
             }            
         }
 
+        private List<int> GetGrabbedList()
+        {
+            //var cnt = 0;
+            
+            var list = new List<int>();
+
+            foreach (var con in cons)
+            {
+                if (con.IsPostProc)
+                {
+                    //cnt++;
+                    list.Add(con.ConnID);
+                }
+            }
+
+            return list;
+        }
+
         public void Grab()
         {
             PrepareReadyList();
@@ -287,8 +307,66 @@ namespace DXTesting
         public void SaveAll(string format)
         {
 
-            //MessageBox.Show("Сохраняем в формате... " + format);
+            
+            SaveFileDialog saveDialog = new SaveFileDialog();
 
+            var sdir = Settings.getInstance().SaveDir + "\\";
+
+            saveDialog.AddExtension = true;
+            saveDialog.Filter = "Файл в формате *." + format + "|" + "*." + format;
+            saveDialog.InitialDirectory = sdir;
+
+
+            var dlm = ";";
+            var newline = "\r\n";
+            var bracket = "\"";
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+
+                using (var csv = new FileStream(saveDialog.FileName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
+                using (var writer = new StreamWriter(csv, Encoding.UTF8))
+                {
+                    var header = bracket + "x сек" + bracket + dlm;
+
+                    var l = GetGrabbedList();
+
+                    int n = 0;
+
+                    foreach (var item in l)
+                    {
+                        header = header + bracket + "port_" + ports[item] + bracket + dlm;
+                        n = cons[item].rdata.X.Length;
+                    }
+
+                    var exes = cons[l[0]].rdata.X;
+
+                    header = header + newline;
+
+                    writer.Write(header);
+
+                    
+                    for (int i = 0; i < n; i++)
+                    {
+                        var line = bracket + exes[i].ToString("F2") + bracket + dlm;
+
+                        foreach (var item in l)
+                        {
+                            line = line + bracket + cons[item].rdata.Y[i].ToString("F2") + bracket + dlm;
+                        }
+
+                        line = line + newline;
+                        
+                        writer.Write(line);
+                    }
+
+                    //writer.Close();
+                    //csv.Close();
+                }
+                MessageBox.Show("Сохранено в " + saveDialog.FileName );
+            }
+            //
+            /*
             switch (format)
             {
                 case "csv":
@@ -311,7 +389,7 @@ namespace DXTesting
                 default:
                     MessageBox.Show("В демоверсии нельзя сохранять в Binary");
                     break;
-            }
+            }*/
 
 
         }

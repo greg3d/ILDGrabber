@@ -514,34 +514,10 @@ namespace DXTesting
             }
         }
 
-        public void SaveAsCSV()
-        {
-
-            var sdir = Settings.getInstance().SaveDir + "\\";
-
-            var fname = sdir + "flow" + PortNum + ".csv";
-
-
-            using (var csv = new FileStream(fname, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
-            using (var writer = new StreamWriter(csv, Encoding.UTF8))
-            {
-                var header = "\"Иксы\";\"Игреки\"\r\n";
-                writer.Write(header);
-
-                for (int i = 0; i < rdata.X.Length; i++)
-                {
-                    var line = string.Format("\"{0}\";\"{1}\"\r\n", rdata.X[i], rdata.Y[i]);
-                    writer.Write(line);
-                }
-
-                //writer.Close();
-                //csv.Close();
-            }
-        }
 
         public void SaveAsTXT()
         {
-
+            /*
             var sdir = Settings.getInstance().SaveDir + "\\";
 
             var fname = sdir + "flow" + PortNum + ".txt";
@@ -560,7 +536,7 @@ namespace DXTesting
 
                 //writer.Close();
                 //csv.Close();
-            }
+            }*/
         }
 
     }
