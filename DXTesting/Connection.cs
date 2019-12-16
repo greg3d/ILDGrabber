@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Diagnostics;
 
 namespace DXTesting
 
@@ -47,6 +48,8 @@ namespace DXTesting
         public bool IsPostProc { get; private set; } = false;
         public bool IsConnected { get; private set; } = false;
         public bool IsReady { get; private set; } = false;
+        public bool IsVisible { get; set; } = true;
+
 
         public ViewData vdata { get; private set; }
         public RealData rdata { get; private set; }
@@ -54,6 +57,8 @@ namespace DXTesting
         public string Name { get; private set; }
         public string Serial { get; private set; }
         public double Rate { get; private set; }
+
+        public int Port { get; private set; }
 
 
         public void Dispose()
@@ -234,12 +239,12 @@ namespace DXTesting
                             data = new byte[16];
                             size = 0;
 
-                            Thread.Sleep(500);
+                            Thread.Sleep(100);
 
                             while (stream.DataAvailable) // пока данные есть в потоке
                             {
                                 size = stream.Read(data, 0, data.Length);
-                                Thread.Sleep(100);
+                                //Thread.Sleep(100);
                             }
 
                             if (size == 0)
@@ -311,8 +316,14 @@ namespace DXTesting
         {
             GrabTrigger = false;
 
+
+            
+
             if (IsGrabbing)
             {
+
+                grabbing?.Wait(2000);
+
                 if (demoMode)
                 {
 
@@ -321,8 +332,8 @@ namespace DXTesting
                 {
                     stream?.Write(outputnone, 0, outputnone.Length);
                     stream?.Write(newLine, 0, newLine.Length);
-                    stream?.Close();
-                    client?.Close();
+                    //stream?.Close();
+                    //client?.Close();
                 }
 
                 IsGrabbing = false;
@@ -434,13 +445,22 @@ namespace DXTesting
 
         private void GrabbingTask()
         {
+            //Thread.Sleep(2000);
             if (IsConnected && IsReady)
             {
+                //stream?.Close();
+
+                //client?.Close();
+
+                //client = new TcpClient();
+
+                //client.Connect("192.168.0.252", PortNum);
+                //stream = client.GetStream();
 
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
 
-                byte[] data = new byte[96];
+                byte[] data = new byte[2048];
 
                 int size = 0;
 
@@ -451,60 +471,63 @@ namespace DXTesting
 
                 do
                 {
-
-                    //int realSize = 48;
                     DateTime currentDate = DateTime.Now;
                     float curTick = currentDate.Second * 1000 + currentDate.Millisecond;
 
-                    size = stream.Read(data, 0, 96);
+                    size = stream.Read(data, 0, 2048);
 
-                    int realSize = size / 3;
+                    Trace.WriteLine(size.ToString());
 
-                    float[] internalCount = new float[realSize];
-                    float[] realValues = new float[realSize];
-                    float[] timeValues = new float[realSize];
-
-                    for (int j = 0; j < realValues.Length; j++)
+                    if (size > 0)
                     {
+                        int realSize = size / 3;
 
-                        ticks++;
+                        float[] internalCount = new float[realSize];
+                        float[] realValues = new float[realSize];
+                        float[] timeValues = new float[realSize];
 
-                        byte low = data[j * 3];
-                        byte mid = data[j * 3 + 1];
-                        byte high = data[j * 3 + 2];
-
-                        float val = (low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + ((high & 0b0000_1111) << 12);
-                        val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
-
-                        var err = high & 0b0111_0000;
-
-                        if (err > 0)
+                        for (int j = 0; j < realValues.Length; j++)
                         {
-                            val = float.NaN;
+
+                            ticks++;
+
+                            byte low = data[j * 3];
+                            byte mid = data[j * 3 + 1];
+                            byte high = data[j * 3 + 2];
+
+                            float val = (low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + ((high & 0b0000_1111) << 12);
+                            val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
+
+                            var err = high & 0b0111_0000;
+                            /*
+                            if (err > 0)
+                            {
+                                val = float.NaN;
+                            }*/
+
+                            float tt = (float)ticks / (float)Rate;
+
+                            internalCount[j] = curTick;
+                            realValues[j] = val;
+                            timeValues[j] = tt;
+
+                            var package = new byte[4 * 3];
+
+                            Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
+                            FileWriter.Write(package);
+
                         }
 
-                        float tt = (float)ticks / (float)Rate;
-
-                        internalCount[j] = curTick;
-                        realValues[j] = val;
-                        timeValues[j] = tt;
-
-                        var package = new byte[4 * 3];
-
-                        Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
-                        FileWriter.Write(package);
-
+                        Task.Factory.StartNew(() =>
+                        {
+                            vdata.Push(timeValues, realValues, realSize);
+                            NeedRedraw?.Invoke(this);
+                        });
                     }
-
-                    Task.Factory.StartNew(() =>
-                    {
-                        vdata.Push(timeValues, realValues, realSize);
-                        NeedRedraw?.Invoke(this);
-                    });
 
                     //vdata.Push(timeValues, realValues, realSize);
 
-                    Thread.Sleep(100);
+                    Thread.Sleep(50);
 
                     IsGrabbing = true;
 

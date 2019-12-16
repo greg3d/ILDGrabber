@@ -334,7 +334,7 @@ namespace DXTesting
                 int visibleCount = 0;
                 foreach (var con in conz.cons)
                 {
-                    if (con.IsReady)
+                    if (con.IsReady && con.IsVisible)
                     {
                         visibleCount++;
                         IsGrabbing = IsGrabbing && con.IsGrabbing;
@@ -359,7 +359,7 @@ namespace DXTesting
                 int i = 0;
                 foreach (var con in conz.cons)
                 {
-                    if (con.IsReady && (IsGrabbing ^ IsPostProc))
+                    if (con.IsReady && con.IsVisible && (IsGrabbing ^ IsPostProc))
                     {
 
                         var curPlot = plotList[i];

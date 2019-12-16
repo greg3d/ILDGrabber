@@ -29,8 +29,8 @@
                             />
         <Label x:Name="label" Content="{Binding Fps, ElementName=chartControl1 }" Margin="0" Background="LightGray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="2" HorizontalAlignment="Left" Width="23" VerticalAlignment="Center" Padding="0,2,0,3" FontSize="10"/>
         <Button x:Name="ConnectButton" Content="Коннект" Margin="10,0" Click="ConnectButton_Click" BorderThickness="1" Style="{DynamicResource RoundedButton}" Grid.ColumnSpan="2" Grid.Row="1" VerticalAlignment="Top" Height="31" />
-        <Button x:Name="GrabButton" Content="Сбор" Margin="10,98,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}" RenderTransformOrigin="0.505,0.518"/>
-        <Button x:Name="StopButton" Content="Стоп" Margin="5,98,10,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>
+        <Button x:Name="GrabButton" Content="Сбор" Margin="10,110,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}" RenderTransformOrigin="0.505,0.518"/>
+        <Button x:Name="StopButton" Content="Стоп" Margin="5,110,10,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>
 
         <Button x:Name="SaveDataToFile" Content="Сохранить" Margin="10,0,10,10" Grid.Row="3" Height="33" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Command="{Binding SaveToFileCommand}" />
         <TextBox Grid.Column="2" HorizontalAlignment="Left" Margin="128,10,0,10" TextWrapping="Wrap" Text="192.168.0.252" Width="103" VerticalContentAlignment="Center" TextAlignment="Center"/>
@@ -81,6 +81,27 @@
             
             <Ellipse x:Name="EStatus8" Grid.Column="7" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             <TextBlock Text="8" FontSize="8" Grid.Column="7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+
+        <Grid Height="16" Margin="10,76,10,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="checkBox1" Grid.Column="0" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox2" Grid.Column="1" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox3" Grid.Column="2" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox4" Grid.Column="3" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox5" Grid.Column="4" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox6" Grid.Column="5" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox7" Grid.Column="6" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox8" Grid.Column="7" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
         </Grid>
         <StackPanel Orientation="Horizontal" Grid.Column="2" HorizontalAlignment="Left" Margin="316,10,0,10" VerticalAlignment="Center" Height="28" Width="188">
             <TextBox x:Name="textBoxSaveDir" Grid.Column="1" Margin="0" TextWrapping="Wrap" VerticalContentAlignment="Center" Text="{Binding Path=SaveDir}" HorizontalAlignment="Left" Width="151" Height="28" VerticalAlignment="Center"/>

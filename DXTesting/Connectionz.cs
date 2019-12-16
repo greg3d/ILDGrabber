@@ -185,6 +185,7 @@ namespace DXTesting
 
             for (int i = 0; i < Count; i++)
             {
+                //Thread.Sleep(500);
                 cons[i].StartGrab();
             }
         }
@@ -199,7 +200,7 @@ namespace DXTesting
                 cons[i].StopGrab();
             }
 
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
 
 
             float[] startTimes = new float[ReadyCount];
@@ -283,8 +284,9 @@ namespace DXTesting
             }
 
 
-            for (int i = 0; i < Count; i++)
+            foreach (var i in ReadyList)
             {
+
                 cons[i].PrepareForView();
             }
 
@@ -293,9 +295,11 @@ namespace DXTesting
         public void ConnectAllTask()
         {
 
+
             for (int i = 0; i < Count; i++)
             {
                 cons[i].Connect(ports[i]);
+
             }
 
             SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
@@ -348,7 +352,7 @@ namespace DXTesting
                     
                     for (int i = 0; i < n; i++)
                     {
-                        var line = bracket + exes[i].ToString("F2") + bracket + dlm;
+                        var line = bracket + exes[i].ToString("F3") + bracket + dlm;
 
                         foreach (var item in l)
                         {

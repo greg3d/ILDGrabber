@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Shapes;
@@ -138,6 +139,26 @@ namespace DXTesting
             indicators[5] = EStatus6;
             indicators[6] = EStatus7;
             indicators[7] = EStatus8;
+
+            Binding bind = new Binding();
+            bind.Source = cons.cons[0];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox1.SetBinding(CheckBox.IsCheckedProperty, bind);
+
+            bind = new Binding();
+            bind.Source = cons.cons[1];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox2.SetBinding(CheckBox.IsCheckedProperty, bind);
+
+            bind = new Binding();
+            bind.Source = cons.cons[2];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox3.SetBinding(CheckBox.IsCheckedProperty, bind);
+
+
 
         }
 
