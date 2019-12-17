@@ -322,9 +322,14 @@ namespace DXTesting
 
             }
 
-            SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
-
             PrepareReadyList();
+            if (this.ReadyCount > 0)
+            {
+                SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
+            } else
+            {
+                SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedError"));
+            }
 
         }
 

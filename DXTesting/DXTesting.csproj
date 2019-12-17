@@ -83,6 +83,9 @@
     <Compile Include="Connection.cs" />
     <Compile Include="Connectionz.cs" />
     <Compile Include="NativeMethods.cs" />
+    <Compile Include="ProgBarWindow.xaml.cs">
+      <DependentUpon>ProgBarWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ResourceCache.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
@@ -107,6 +110,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ProgBarWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="SettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

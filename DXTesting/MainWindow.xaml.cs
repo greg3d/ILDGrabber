@@ -120,7 +120,7 @@ namespace DXTesting
 
             Connectionz cons = Connectionz.getInstance();
             cons.SendMessage += ButtonsDisabling;
-            cons.ProgressChanged += ProgressChangedHandler;
+            //cons.ProgressChanged += ProgressChangedHandler;
 
             for (int i = 0; i < cons.cons.Length; i++)
             {
@@ -200,27 +200,22 @@ namespace DXTesting
             chartControl1.DoRedraw = true;
         }
 
-        private void ProgressChangedHandler(ProgressArgs e)
-        {
-            int stat = e.Status;
-            this.Dispatcher.Invoke(() =>
-            {
-                progbar1.Value = stat;
-            });
-            
-        }
-
         private void ButtonsDisabling(object sender, ConzEventArgs e)
         {
             this.Dispatcher.Invoke(() =>
             {
-                ConnectButton.IsEnabled = false;
+                ConnectButton.IsEnabled = true;
 
                 switch (e.Message)
                 {
                     case "AllConnectedSuccess":
                         ConnectButton.IsEnabled = false;
                         GrabButton.IsEnabled = true;
+                        StopButton.IsEnabled = false;
+                        break;
+                    case "AllConnectedError":
+                        ConnectButton.IsEnabled = true;
+                        GrabButton.IsEnabled = false;
                         StopButton.IsEnabled = false;
                         break;
                 }
@@ -271,8 +266,11 @@ namespace DXTesting
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
+            ConnectButton.IsEnabled = false;
+
             Connectionz cons = Connectionz.getInstance();
             cons.ConnectAll();
+            
             checkBoxDemo.IsEnabled = false;
 
 
@@ -292,6 +290,13 @@ namespace DXTesting
             cons.Stop();
             GrabButton.IsEnabled = true;
             StopButton.IsEnabled = false;
+
+            ProgBarWindow pbarw = new ProgBarWindow();
+            pbarw.Activate();
+            pbarw.Topmost = true;
+            //sWindo
+            pbarw.ShowDialog();
+
         }
 
         private void PropertyChanged(object sender, ProgressChangedEventArgs e)
