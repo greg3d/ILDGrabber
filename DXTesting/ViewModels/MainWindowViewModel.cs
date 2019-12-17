@@ -7,28 +7,10 @@ namespace DXTesting
 
     class MainWindowViewModel : BaseViewModel
     {
-
-        private string _saveDir;
         private bool _demo;
         private SaveFormat _currentFormat;
 
         private Settings settings = Settings.getInstance();
-
-        public string SaveDir
-        {
-            get { return _saveDir; }
-            set
-            {
-                if (value == _saveDir)
-                {
-                    return;
-                }
-
-                _saveDir = value;
-                settings.SaveDir = value;
-                OnPropertyChanged("SaveDir");
-            }
-        }
 
         public bool Demo
         {
@@ -47,7 +29,6 @@ namespace DXTesting
             }
         }
 
-
         public SaveFormat CurrentFormat
         {
             get { return _currentFormat; }
@@ -62,10 +43,8 @@ namespace DXTesting
 
         public MainWindowViewModel()
         {
-            SaveDir = settings.SaveDir;
             Demo = settings.Demo;
             CurrentFormat = SaveFormat.csv;
-
             SaveToFileCommand = new RelayCommand(SaveToFileMethod, CanExecuteMyMethod);
         }
 

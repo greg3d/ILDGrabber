@@ -1,7 +1,39 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="uri:settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="DXTesting.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="SaveDir" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Results</Value>
+    </Setting>
+    <Setting Name="IpAddress" Type="System.String" Scope="User">
+      <Value Profile="(Default)">192.168.0.252</Value>
+    </Setting>
+    <Setting Name="Port1" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4001</Value>
+    </Setting>
+    <Setting Name="Port2" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4002</Value>
+    </Setting>
+    <Setting Name="Port3" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4003</Value>
+    </Setting>
+    <Setting Name="Port4" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4004</Value>
+    </Setting>
+    <Setting Name="Port5" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4005</Value>
+    </Setting>
+    <Setting Name="Port6" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4006</Value>
+    </Setting>
+    <Setting Name="Port7" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4007</Value>
+    </Setting>
+    <Setting Name="Port8" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">4008</Value>
+    </Setting>
+    <Setting Name="Rate" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">500</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>

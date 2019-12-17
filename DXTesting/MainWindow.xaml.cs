@@ -56,41 +56,43 @@ namespace DXTesting
         }
     }
 
+    public class EnumBooleanConverter : IValueConverter
+    {
+        #region IValueConverter Members
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            string parameterString = parameter as string;
+            if (parameterString == null)
+            {
+                return DependencyProperty.UnsetValue;
+            }
+
+            if (Enum.IsDefined(value.GetType(), value) == false)
+            {
+                return DependencyProperty.UnsetValue;
+            }
+
+            object parameterValue = Enum.Parse(value.GetType(), parameterString);
+
+            return parameterValue.Equals(value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            string parameterString = parameter as string;
+            if (parameterString == null)
+            {
+                return DependencyProperty.UnsetValue;
+            }
+
+            return Enum.Parse(targetType, parameterString);
+        }
+        #endregion
+    }
+
     public partial class MainWindow : Window
     {
-        public class EnumBooleanConverter : IValueConverter
-        {
-            #region IValueConverter Members
-            public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-            {
-                string parameterString = parameter as string;
-                if (parameterString == null)
-                {
-                    return DependencyProperty.UnsetValue;
-                }
 
-                if (Enum.IsDefined(value.GetType(), value) == false)
-                {
-                    return DependencyProperty.UnsetValue;
-                }
-
-                object parameterValue = Enum.Parse(value.GetType(), parameterString);
-
-                return parameterValue.Equals(value);
-            }
-
-            public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-            {
-                string parameterString = parameter as string;
-                if (parameterString == null)
-                {
-                    return DependencyProperty.UnsetValue;
-                }
-
-                return Enum.Parse(targetType, parameterString);
-            }
-            #endregion
-        }
 
         private Ellipse[] indicators;
 
@@ -118,6 +120,7 @@ namespace DXTesting
 
             Connectionz cons = Connectionz.getInstance();
             cons.SendMessage += ButtonsDisabling;
+            cons.ProgressChanged += ProgressChangedHandler;
 
             for (int i = 0; i < cons.cons.Length; i++)
             {
@@ -158,6 +161,36 @@ namespace DXTesting
             bind.Mode = BindingMode.TwoWay;
             checkBox3.SetBinding(CheckBox.IsCheckedProperty, bind);
 
+            bind = new Binding();
+            bind.Source = cons.cons[3];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox4.SetBinding(CheckBox.IsCheckedProperty, bind);
+
+            bind = new Binding();
+            bind.Source = cons.cons[4];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox5.SetBinding(CheckBox.IsCheckedProperty, bind);
+
+            bind = new Binding();
+            bind.Source = cons.cons[5];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox6.SetBinding(CheckBox.IsCheckedProperty, bind);
+
+            bind = new Binding();
+            bind.Source = cons.cons[6];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox7.SetBinding(CheckBox.IsCheckedProperty, bind);
+
+            bind = new Binding();
+            bind.Source = cons.cons[7];
+            bind.Path = new PropertyPath("IsVisible");
+            bind.Mode = BindingMode.TwoWay;
+            checkBox8.SetBinding(CheckBox.IsCheckedProperty, bind);
+
 
 
         }
@@ -165,6 +198,16 @@ namespace DXTesting
         private void DoRedrawHandler(object sender)
         {
             chartControl1.DoRedraw = true;
+        }
+
+        private void ProgressChangedHandler(ProgressArgs e)
+        {
+            int stat = e.Status;
+            this.Dispatcher.Invoke(() =>
+            {
+                progbar1.Value = stat;
+            });
+            
         }
 
         private void ButtonsDisabling(object sender, ConzEventArgs e)
@@ -231,7 +274,7 @@ namespace DXTesting
             Connectionz cons = Connectionz.getInstance();
             cons.ConnectAll();
             checkBoxDemo.IsEnabled = false;
-            textBoxSaveDir.IsEnabled = false;
+
 
         }
 
@@ -414,6 +457,21 @@ namespace DXTesting
                 chartControl1.ReleaseMouseCapture();
 
             }
+        }
+
+        private void buttonAutoScale_Click(object sender, RoutedEventArgs e)
+        {
+            chartControl1.AutoYzoom = true;
+            chartControl1.DoRedraw = true;
+        }
+
+        private void buttonOpenSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow sWindow = new SettingsWindow();
+            sWindow.Activate();
+            sWindow.Topmost = true;
+            //sWindo
+            sWindow.ShowDialog();
         }
     }
 

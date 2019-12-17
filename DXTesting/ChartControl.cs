@@ -61,7 +61,7 @@ namespace DXTesting
 
         public Plot[] plotList;
 
-        float nPoints = 5000;
+        // float nPoints = 5000;
 
         bool autoYzoom = true;
 
@@ -196,8 +196,6 @@ namespace DXTesting
         public void ScaleX(int sign)
         {
 
-            //foreach (var item in plotList)
-            //{
             if (sign > 0)
             {
                 var xx = xMax - xMin;
@@ -212,8 +210,6 @@ namespace DXTesting
                 xMin = xMin - xx / 20;
                 xMax = xMax + xx / 20;
             }
-
-            // }
 
         }
 
@@ -322,6 +318,12 @@ namespace DXTesting
                 TextAlignment = TextAlignment.Center
             };
 
+            var headerTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", FontWeight.Bold, FontStyle.Normal, 12)
+            {
+                ParagraphAlignment = ParagraphAlignment.Far,
+                TextAlignment = TextAlignment.Center
+            };
+
 
             Connectionz conz = Connectionz.getInstance();
 
@@ -349,7 +351,7 @@ namespace DXTesting
                     {
                         plotList[gg] = new Plot();
                     }
-
+                    autoYzoom = true;
                     oldVisibleCount = visibleCount;
                 }
 
@@ -372,178 +374,148 @@ namespace DXTesting
                         RawRectangleF PlotArea = new RawRectangleF(curPlot.x1, curPlot.y1, curPlot.x2, curPlot.y2);
                         target.DrawRectangle(PlotArea, helperBrush, 1.0f);
 
+                        float tickGapX = 5f; //sec
+
+                        float tickGapY = 10f; //mm
+
+                        RealData data;
+
                         if (IsGrabbing)
                         {
+                            data = con.vdata;
                             autoYzoom = true;
-                            DoAutoScale(ref con.vdata.X, ref con.vdata.Y, ref curPlot, autoYzoom);
-
-                            // расстояние между тиками по X = 5 сек
-                            int tickGap = 5; //sec
-
-
-                            //var tnum = xMax / tickGap;
-                            float xStart = (float)Math.Ceiling(xMin / tickGap) * tickGap;
-                            float xEnd = (float)Math.Floor(xMax / tickGap) * tickGap;
-
-                            labelTextFormat.TextAlignment = TextAlignment.Center;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-
-                            // рисуем тики X
-                            for (var k = xStart - tickGap; k < xEnd + tickGap; k = k + tickGap)
-                            {
-
-                                RawVector2 tickPoint = PointToCanvas(curPlot, k, 0);
-                                RawVector2 point1 = new RawVector2(tickPoint.X, curPlot.y2 - 2);
-                                RawVector2 point2 = new RawVector2(tickPoint.X, curPlot.y1 + 2);
-
-                                target.DrawLine(point1, point2, helperBrush);
-
-                                drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
-                            }
-
-                            //  рисуем тики для Y 
-                            labelTextFormat.TextAlignment = TextAlignment.Leading;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
-
-                            for (var k = -10; k < 50; k = k + 10)
-                            {
-                                RawVector2 tickPoint = PointToCanvasN(curPlot, con.vdata.X[(int)nPoints - 1], k);
-                                RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
-                                RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
-
-                                if ((tickPoint.Y > curPlot.y1) & (tickPoint.Y < curPlot.y2))
-                                {
-                                    target.DrawLine(point1, point2, transparentBrush);
-                                    drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
-                                }
-                            }
-
-                            labelTextFormat.TextAlignment = TextAlignment.Leading;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
-
-                            // рисуем значения yMax и yMin
-                            drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
-                            drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
-
-                            // рисуем текущее значение
-                            labelTextFormat.TextAlignment = TextAlignment.Leading;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-                            drawText(con.vdata.Y[(int)nPoints - 1].ToString("F3"), ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 4);
-
-                            // Рисуем сам график
-                            float ww = curPlot.x2 - curPlot.x1;
-                            int step = 1;
-
-                            if (nPoints / ww > 2)
-                            {
-                                step = (int)Math.Floor(nPoints / ww);
-                            }
-
-                            for (int jjj = 0; jjj < nPoints - step; jjj = jjj + step)
-                            {
-                                RawVector2 stPoint = PointToCanvas(curPlot, con.vdata.X[jjj], con.vdata.Y[jjj]);
-                                RawVector2 endPoint = PointToCanvas(curPlot, con.vdata.X[jjj + step], con.vdata.Y[jjj + step]);
-                                target.DrawLine(stPoint, endPoint, blueBrush);
-                            }
                         }
-
-                        if (IsPostProc)
+                        else
+                        // if (IsPostProc)
                         {
-
-                            var data = con.rdata;
-
-                            DoAutoScale(ref data.X, ref data.Y, ref curPlot, autoYzoom);
-
-                            // Определяем насколько точек больше чем на экране
-                            var N = data.X.Length;
-                            float ww = curPlot.x2 - curPlot.x1;
-                            int step = 1;
-
-                            if (N / ww > 2)
-                            {
-                                step = (int)Math.Floor(N / ww);
-                            }
-
-                            // расстояние между тиками по X
-                            float tickGap = 5; //sec
+                            data = con.rdata;
 
                             var xScale = (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin);
                             var xSpacing = 80 / xScale;
 
-                            tickGap = OptimalSpacing(xSpacing);
+                            tickGapX = OptimalSpacing(xSpacing);
 
-                            float xStart = (float)Math.Ceiling(curPlot.xMin / tickGap) * tickGap;
-                            float xEnd = (float)Math.Floor(curPlot.xMax / tickGap) * tickGap;
+                            var yScale = (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin);
+                            var ySpacing = 20 / yScale;
 
-                            labelTextFormat.TextAlignment = TextAlignment.Center;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-
-                            // рисуем тики X
-                            for (float k = xStart - tickGap; k < xEnd + tickGap; k = k + tickGap)
-                            {
-
-                                RawVector2 tickPoint = PointToCanvas(curPlot, k, 0);
-                                RawVector2 point1 = new RawVector2(tickPoint.X, curPlot.y2 - 2);
-                                RawVector2 point2 = new RawVector2(tickPoint.X, curPlot.y1 + 2);
-
-                                target.DrawLine(point1, point2, helperBrush);
-
-                                drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
-                            }
-
-                            //  рисуем тики для Y 
-                            labelTextFormat.TextAlignment = TextAlignment.Leading;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
-
-                            for (var k = -10; k < 50; k = k + 10)
-                            {
-                                RawVector2 tickPoint = PointToCanvasN(curPlot, con.vdata.X[(int)nPoints - 1], k);
-                                RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
-                                RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
-
-                                if ((tickPoint.Y>curPlot.y1)&(tickPoint.Y < curPlot.y2))
-                                {
-                                    target.DrawLine(point1, point2, transparentBrush);
-                                    drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
-                                }
-                            }
-
-                            labelTextFormat.TextAlignment = TextAlignment.Leading;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
-
-                            // рисуем значения yMax и yMin
-                            drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
-                            drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
-
-                            // рисуем текущее значение
-                            labelTextFormat.TextAlignment = TextAlignment.Leading;
-                            labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-                            drawText(data.Y[N - 1].ToString("F3"), ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 4);
-
-                            // Рисуем сам график
-                            for (int jjj = 0; jjj < N - step; jjj = jjj + step)
-                            {
-                                RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
-                                RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
-                                target.DrawLine(stPoint, endPoint, blueBrush);
-
-                                // РИСУЕМ КУРСОР 
-
-                                if (_cursor > 0 && _cursor == Math.Round(stPoint.X))
-                                {
-                                    RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
-                                    RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
-                                    target.DrawLine(stPoint2, endPoint2, brushblack);
-                                }
-                            }
-
-                            autoYzoom = false;
+                            tickGapY = OptimalSpacing(ySpacing);
 
                         }
+
+                        DoAutoScale(ref data.X, ref data.Y, ref curPlot, autoYzoom);
+
+                        // Определяем насколько точек больше чем на экране
+                        var N = data.X.Length;
+                        float ww = curPlot.x2 - curPlot.x1;
+                        int step = 1;
+
+                        if (N / ww > 2)
+                        {
+                            step = (int)Math.Floor(N / ww);
+                        }
+
+                        float xStart = (float)Math.Ceiling(curPlot.xMin / tickGapX) * tickGapX;
+                        float xEnd = (float)Math.Floor(curPlot.xMax / tickGapX) * tickGapX;
+
+                        float yStart = (float)Math.Ceiling(curPlot.yMin / tickGapY) * tickGapY;
+                        float yEnd = (float)Math.Floor(curPlot.yMax / tickGapY) * tickGapY;
+
+                        labelTextFormat.TextAlignment = TextAlignment.Center;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+
+                        // рисуем тики X
+                        for (var k = xStart - tickGapX; k < xEnd + tickGapX; k = k + tickGapX)
+                        {
+
+                            RawVector2 tickPoint = PointToCanvasN(curPlot, k, 0);
+                            RawVector2 point1 = new RawVector2(tickPoint.X, curPlot.y2 - 2);
+                            RawVector2 point2 = new RawVector2(tickPoint.X, curPlot.y1 + 2);
+                            target.DrawLine(point1, point2, helperBrush);
+                            drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
+                        }
+
+                        //  рисуем тики для Y 
+                        labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
+
+                        for (var k = yStart - tickGapY; k < yEnd + tickGapY; k = k + tickGapY)
+                        {
+                            RawVector2 tickPoint = PointToCanvasN(curPlot, data.X[(int)N - 1], k);
+                            RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
+                            RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
+
+                            if ((tickPoint.Y > curPlot.y1) & (tickPoint.Y < curPlot.y2))
+                            {
+                                target.DrawLine(point1, point2, transparentBrush);
+                                drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                            }
+                        }
+
+                        labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
+
+                        // рисуем значения yMax и yMin
+                        drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
+                        drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
+
+
+
+
+
+
+                        float cursorVal = 0;
+
+                        // Рисуем сам график
+                        for (int jjj = 0; jjj < N - step; jjj = jjj + step)
+                        {
+                            RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
+                            RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
+                            target.DrawLine(stPoint, endPoint, blueBrush);
+
+                            // РИСУЕМ КУРСОР 
+                            if (_cursor > 0 && _cursor == Math.Round(stPoint.X))
+                            {
+                                RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
+                                RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
+                                target.DrawLine(stPoint2, endPoint2, brushblack);
+                                cursorVal = data.Y[jjj];
+                            }
+                        }
+
+
+                        // рисуем текущее значение
+
+                        string curVal;
+                        if (IsGrabbing)
+                        {
+                            curVal = data.Y[N - 1].ToString("F3");
+                        }
+                        else
+                        {
+                            curVal = cursorVal.ToString("F3");
+                        }
+
+                        headerTextFormat.TextAlignment = TextAlignment.Trailing;
+                        headerTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+
+                        drawText(curVal, ref headerTextFormat, ref brushblack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
+
+
+                        // рисуем вспомогательное 
+                        labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        headerTextFormat.TextAlignment = TextAlignment.Leading;
+                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+                        drawText((con.ConnID + 1).ToString(), ref headerTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 2);
+                        drawText(con.Serial, ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 12, curPlot.y1 + 4);
 
                         i++;
                     }
 
+                }
+
+                if (IsPostProc)
+                {
+                    autoYzoom = false;
                 }
 
                 DoRedraw = false;

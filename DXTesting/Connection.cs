@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -6,7 +7,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Diagnostics;
 
 namespace DXTesting
 
@@ -28,6 +28,7 @@ namespace DXTesting
         private BinaryWriter FileWriter;
         private BinaryReader FReader;
         private int PortNum;
+        private string ipaddr;
 
         private long ticks = 0;
         private byte[] measrate;
@@ -51,15 +52,12 @@ namespace DXTesting
         public bool IsVisible { get; set; } = true;
 
 
-        public ViewData vdata { get; private set; }
+        public RealData vdata { get; private set; }
         public RealData rdata { get; private set; }
         public float Range { get; private set; }
         public string Name { get; private set; }
         public string Serial { get; private set; }
         public double Rate { get; private set; }
-
-        public int Port { get; private set; }
-
 
         public void Dispose()
         {
@@ -72,18 +70,14 @@ namespace DXTesting
             stream?.Dispose();
         }
 
-        public Connection(int id, double mrate, string srate)
+        public Connection(int id)
         {
             client = new TcpClient();
             //indicator = indi;
 
             ConnID = id;
-            Rate = mrate*1000;
 
-            string command = "MEASRATE " + srate;
-            measrate = Encoding.ASCII.GetBytes(command);
-
-            command = "OUTPUT RS422";
+            var command = "OUTPUT RS422";
             outputrs = Encoding.ASCII.GetBytes(command);
 
             command = "OUTPUT NONE";
@@ -94,15 +88,21 @@ namespace DXTesting
         }
 
 
-        public void Connect(int port)
+        public void Connect(int port, string srate, double mrate)
         {
+
+            Rate = mrate * 1000;
+
+            string command = "MEASRATE " + srate;
+            measrate = Encoding.ASCII.GetBytes(command);
 
             Settings sets = Settings.getInstance();
             demoMode = sets.Demo;
 
             PortNum = port;
+            ipaddr = Properties.Settings.Default.IpAddress;
 
-            var sdir = Settings.getInstance().SaveDir + "\\";
+            var sdir = Properties.Settings.Default.SaveDir + "\\";
 
             if (!Directory.Exists(sdir))
             {
@@ -132,7 +132,7 @@ namespace DXTesting
                         case 0:
                             try
                             {
-                                Task connTa = client.ConnectAsync("192.168.0.252", port);
+                                Task connTa = client.ConnectAsync(ipaddr, port);
                                 bool result = connTa.Wait(500);
 
                                 if (result)
@@ -172,8 +172,19 @@ namespace DXTesting
 
                             stream = client.GetStream();
 
+                            command = "OUTPUT NONE\r\n";
+                            byte[] outcmd = Encoding.ASCII.GetBytes(command);
+                            stream.Write(outcmd, 0, outcmd.Length);
+
+                            stream.Close();
+                            client.Close();
+
+                            client = new TcpClient();
+                            client.Connect(ipaddr, PortNum);
+                            stream = client.GetStream();
+
                             // отправка сообщения\\\
-                            string command = "GETINFO";
+                            command = "GETINFO";
                             byte[] getinfo = Encoding.ASCII.GetBytes(command);
 
                             stream.Write(getinfo, 0, getinfo.Length);
@@ -185,13 +196,13 @@ namespace DXTesting
 
                             string infoOut = "";
 
-                            Thread.Sleep(100);
+                            Thread.Sleep(50);
 
                             while (stream.DataAvailable) // пока данные есть в потоке
                             {
                                 size = stream.Read(data, 0, data.Length);
                                 infoOut = infoOut + Encoding.ASCII.GetString(data, 0, size);
-                                Thread.Sleep(100);
+                                Thread.Sleep(20);
                             }
 
                             if (infoOut.Length < 1)
@@ -239,7 +250,7 @@ namespace DXTesting
                             data = new byte[16];
                             size = 0;
 
-                            Thread.Sleep(100);
+                            Thread.Sleep(20);
 
                             while (stream.DataAvailable) // пока данные есть в потоке
                             {
@@ -265,6 +276,9 @@ namespace DXTesting
                                 Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
 
                             }
+                            stream.Close();
+                            client.Close();
+
 
                             break;
 
@@ -287,7 +301,8 @@ namespace DXTesting
 
             if (IsReady)
             {
-                vdata = new ViewData();
+
+                vdata = new RealData(5000, true);
 
                 tf = new TaskFactory(
                     TaskCreationOptions.LongRunning,
@@ -302,6 +317,11 @@ namespace DXTesting
                 }
                 else
                 {
+                    client = new TcpClient();
+
+                    client.Connect(ipaddr, PortNum);
+                    stream = client.GetStream();
+
                     grabbing = tf.StartNew(GrabbingTask);
                 }
 
@@ -317,12 +337,12 @@ namespace DXTesting
             GrabTrigger = false;
 
 
-            
+
 
             if (IsGrabbing)
             {
 
-                grabbing?.Wait(2000);
+                grabbing?.Wait(1000);
 
                 if (demoMode)
                 {
@@ -332,8 +352,8 @@ namespace DXTesting
                 {
                     stream?.Write(outputnone, 0, outputnone.Length);
                     stream?.Write(newLine, 0, newLine.Length);
-                    //stream?.Close();
-                    //client?.Close();
+                    stream?.Close();
+                    client?.Close();
                 }
 
                 IsGrabbing = false;
@@ -359,7 +379,7 @@ namespace DXTesting
 
             long n = fs.Length / 8;
 
-            rdata = new RealData(n);
+            rdata = new RealData(n, false);
 
             var i = 0;
 
@@ -439,23 +459,15 @@ namespace DXTesting
 
                 }
                 while (GrabTrigger); // пока данные есть в потоке и не отменена операция
-
             }
         }
 
         private void GrabbingTask()
         {
-            //Thread.Sleep(2000);
+
             if (IsConnected && IsReady)
             {
-                //stream?.Close();
 
-                //client?.Close();
-
-                //client = new TcpClient();
-
-                //client.Connect("192.168.0.252", PortNum);
-                //stream = client.GetStream();
 
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
@@ -469,6 +481,17 @@ namespace DXTesting
 
                 stream.Read(data, 0, 4);
 
+                stream.Close();
+                client.Close();
+
+                // Thread.Sleep(100);
+
+                client = new TcpClient();
+
+                client.Connect(ipaddr, PortNum);
+                stream = client.GetStream();
+                //stream.Flush();
+
                 do
                 {
                     DateTime currentDate = DateTime.Now;
@@ -480,7 +503,8 @@ namespace DXTesting
 
                     if (size > 0)
                     {
-                        int realSize = size / 3;
+
+                        int realSize = (size) / 3;
 
                         float[] internalCount = new float[realSize];
                         float[] realValues = new float[realSize];
@@ -527,7 +551,7 @@ namespace DXTesting
 
                     //vdata.Push(timeValues, realValues, realSize);
 
-                    Thread.Sleep(50);
+                    //Thread.Sleep(50);
 
                     IsGrabbing = true;
 
