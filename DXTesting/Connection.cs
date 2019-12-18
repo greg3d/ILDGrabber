@@ -491,6 +491,7 @@ namespace DXTesting
                 client.Connect(ipaddr, PortNum);
                 stream = client.GetStream();
                 //stream.Flush();
+                float preval = -1;
 
                 do
                 {
@@ -523,11 +524,21 @@ namespace DXTesting
                             val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
 
                             var err = high & 0b0111_0000;
-                            /*
+                            
                             if (err > 0)
                             {
-                                val = float.NaN;
-                            }*/
+                                if ( preval < Range/2f)
+                                {
+                                    val = -1;
+                                }
+                                else
+                                {
+                                    val = Range + 1;
+                                }
+
+                            }
+
+                            preval = val;
 
                             float tt = (float)ticks / (float)Rate;
 
@@ -562,29 +573,7 @@ namespace DXTesting
         }
 
 
-        public void SaveAsTXT()
-        {
-            /*
-            var sdir = Settings.getInstance().SaveDir + "\\";
-
-            var fname = sdir + "flow" + PortNum + ".txt";
-
-            using (var csv = new FileStream(fname, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
-            using (var writer = new StreamWriter(csv, Encoding.UTF8))
-            {
-                var header = "\"Иксы\"\t\"Игреки\"\r\n";
-                writer.Write(header);
-
-                for (int i = 0; i < rdata.X.Length; i++)
-                {
-                    var line = string.Format("\"{0}\"\t\"{1}\"\r\n", rdata.X[i], rdata.Y[i]);
-                    writer.Write(line);
-                }
-
-                //writer.Close();
-                //csv.Close();
-            }*/
-        }
+      
 
     }
 

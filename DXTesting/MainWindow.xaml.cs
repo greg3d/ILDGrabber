@@ -270,7 +270,7 @@ namespace DXTesting
 
             Connectionz cons = Connectionz.getInstance();
             cons.ConnectAll();
-            
+
             checkBoxDemo.IsEnabled = false;
 
 
@@ -432,7 +432,6 @@ namespace DXTesting
         {
             if (chartControl1.IsPostProc)
             {
-
                 chartControl1.ScaleX(-1);
                 chartControl1.DoRedraw = true;
             }
@@ -457,10 +456,8 @@ namespace DXTesting
         {
             if (chartControl1.IsMouseCaptured)
             {
-
                 mouseMode = 0;
                 chartControl1.ReleaseMouseCapture();
-
             }
         }
 
@@ -473,10 +470,15 @@ namespace DXTesting
         private void buttonOpenSettings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow sWindow = new SettingsWindow();
-            sWindow.Activate();
-            sWindow.Topmost = true;
-            //sWindo
             sWindow.ShowDialog();
+            sWindow.Activate();
+        }
+
+        private void buttonOpenService_Click(object sender, RoutedEventArgs e)
+        {
+            ServiceWindow sWindow = new ServiceWindow();
+            sWindow.ShowDialog();
+            sWindow.Activate();
         }
     }
 

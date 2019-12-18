@@ -39,7 +39,7 @@ namespace DXTesting
             }
         }
 
-        public ICommand SaveToFileCommand { get; set; }
+
 
         public MainWindowViewModel()
         {
@@ -47,6 +47,8 @@ namespace DXTesting
             CurrentFormat = SaveFormat.csv;
             SaveToFileCommand = new RelayCommand(SaveToFileMethod, CanExecuteMyMethod);
         }
+
+        public ICommand SaveToFileCommand { get; set; }
 
         private bool CanExecuteMyMethod(object parameter)
         {

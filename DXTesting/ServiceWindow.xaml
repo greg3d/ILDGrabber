@@ -1,0 +1,43 @@
+﻿<Window x:Class="DXTesting.ServiceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DXTesting"
+        mc:Ignorable="d"
+        Title="ServiceWindow" Height="500" Width="430"
+        x:Name="serviceWindow1">
+    <Grid>
+        <Button x:Name="SendCmdButton" Content="Отправить команду" HorizontalAlignment="Left" Margin="10,0,0,128" VerticalAlignment="Bottom" Width="171" Height="39" Command="{Binding Path=SendCommand}"/>
+        <Button x:Name="BaudCmdButton" Content="baudrate" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="131" Height="35" Padding="0" Command="{Binding Path=PrepareBaudCmd}"/>
+        <TextBox x:Name="baudBox" HorizontalAlignment="Left" Height="35" Margin="141,10,0,0" TextWrapping="Wrap" Text="{Binding Path=BaudRate}" VerticalAlignment="Top" Width="136" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        <Button x:Name="StoreCmdButton" Content="Store Meas Settings" Margin="10,88,0,0" VerticalAlignment="Top" Height="33" HorizontalAlignment="Left" Width="131" Click="StoreCmdButton_Click"/>
+        <TextBox x:Name="cmdTextBox" Margin="10,0,70,172" TextWrapping="Wrap" Text="{Binding Path=OutCommand}" VerticalContentAlignment="Center" Height="30" VerticalAlignment="Bottom" Padding="5,0,0,0"/>
+        <Grid Margin="10,0,10,207" Height="32" VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="pickPort1" Content="Port1" Grid.Column="0" Click="pickPort1_Click"/>
+            <Button x:Name="pickPort2" Content="Port2" Grid.Column="1" Click="pickPort2_Click"/>
+            <Button x:Name="pickPort3" Content="Port3" Grid.Column="2" Click="pickPort3_Click"/>
+            <Button x:Name="pickPort4" Content="Port4" Grid.Column="3" Click="pickPort4_Click"/>
+            <Button x:Name="pickPort5" Content="Port5" Grid.Column="4" Click="pickPort5_Click"/>
+            <Button x:Name="pickPort6" Content="Port6" Grid.Column="5" Click="pickPort6_Click"/>
+            <Button x:Name="pickPort7" Content="Port7" Grid.Column="6" Click="pickPort7_Click"/>
+            <Button x:Name="pickPort8" Content="Port8" Grid.Column="7" Click="pickPort8_Click"/>
+        </Grid>
+        <TextBox x:Name="currentPort" Margin="0,0,10,172" TextWrapping="Wrap" Text="{Binding PortNum}" VerticalContentAlignment="Center" Height="30" VerticalAlignment="Bottom" Padding="5,0,0,0" HorizontalAlignment="Right" Width="55"/>
+        <TextBox x:Name="textBox" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Auto" Height="113" Margin="10,0,10,10" Text="{Binding Path=Rcvd}" VerticalAlignment="Bottom"/>
+        <Button x:Name="button" Content="GET INFO" HorizontalAlignment="Left" Margin="10,50,0,0" VerticalAlignment="Top" Width="131" Height="33" Click="button_Click"/>
+        <Button x:Name="StoreCmdButton_Copy" Content="Store Basic Settings" Margin="146,88,0,0" Click="StoreCmdButton_Copy_Click" HorizontalAlignment="Left" Width="131" Height="33" VerticalAlignment="Top"/>
+        <Button x:Name="button_Copy" Content="EXPORT ALL" HorizontalAlignment="Left" Margin="10,126,0,0" VerticalAlignment="Top" Width="131" Height="33" Click="button_Copy_Click"/>
+
+    </Grid>
+</Window>

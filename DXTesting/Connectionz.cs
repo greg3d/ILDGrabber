@@ -72,7 +72,7 @@ namespace DXTesting
     class ProgressArgs
     {
         public int Status { get; }
-        public ProgressArgs (int status)
+        public ProgressArgs(int status)
         {
             Status = status;
         }
@@ -108,7 +108,7 @@ namespace DXTesting
         private Connectionz(int num)
         {
             cons = new Connection[num];
-            
+
 
             for (int i = 0; i < num; i++)
             {
@@ -137,7 +137,7 @@ namespace DXTesting
             return instance;
         }
 
-        private void PrepareReadyList()
+        public void PrepareReadyList()
         {
             ReadyCount = 0;
             ReadyList = new List<int>();
@@ -152,7 +152,7 @@ namespace DXTesting
             }
         }
 
-        private List<int> GetGrabbedList()
+        public List<int> GetGrabbedList()
         {
             //var cnt = 0;
 
@@ -291,7 +291,7 @@ namespace DXTesting
 
                 foreach (var i in ReadyList)
                 {
-                    
+
                     cons[i].PrepareForView();
                 }
 
@@ -326,7 +326,8 @@ namespace DXTesting
             if (this.ReadyCount > 0)
             {
                 SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
-            } else
+            }
+            else
             {
                 SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedError"));
             }
@@ -349,6 +350,15 @@ namespace DXTesting
             var dlm = ";";
             var newline = "\r\n";
             var bracket = "\"";
+
+            switch (format)
+            {
+                case "txt":
+
+                    break;
+                default:
+                    break;
+            }
 
             if (saveDialog.ShowDialog() == DialogResult.OK)
             {
@@ -394,31 +404,7 @@ namespace DXTesting
                 }
                 MessageBox.Show("Сохранено в " + saveDialog.FileName);
             }
-            //
-            /*
-            switch (format)
-            {
-                case "csv":
-
-                    for (int i = 0; i < Count; i++)
-                    {
-                        cons[i].SaveAsCSV();
-                    }
-                    MessageBox.Show("Сохранено в CSV!");
-                    break;
-
-                case "txt":
-                    for (int i = 0; i < Count; i++)
-                    {
-                        cons[i].SaveAsTXT();
-                    }
-                    MessageBox.Show("Сохранено в TXT!");
-                    break;
-
-                default:
-                    MessageBox.Show("В демоверсии нельзя сохранять в Binary");
-                    break;
-            }*/
+            
 
 
         }

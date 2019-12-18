@@ -87,11 +87,15 @@
       <DependentUpon>ProgBarWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ResourceCache.cs" />
+    <Compile Include="ServiceWindow.xaml.cs">
+      <DependentUpon>ServiceWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\BaseViewModel.cs" />
+    <Compile Include="ViewModels\ServiceWindowViewModel.cs" />
     <Compile Include="ViewModels\SettingsWindowViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Page Include="MainWindow.xaml">
@@ -111,6 +115,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="ProgBarWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ServiceWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
