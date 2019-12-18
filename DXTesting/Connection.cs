@@ -12,7 +12,6 @@ namespace DXTesting
 
 {
   
-
     class Connection : IDisposable
     {
         //Events and event delegates

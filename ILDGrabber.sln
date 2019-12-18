@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29509.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXTesting", "DXTesting\DXTesting.csproj", "{26F9B0E0-46F3-4B97-BC14-A66565F41D05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILDGrabber", "DXTesting\ILDGrabber.csproj", "{26F9B0E0-46F3-4B97-BC14-A66565F41D05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

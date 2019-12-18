@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DXTesting"
         mc:Ignorable="d"
-        Title="ILD TCP Grabber | сбор данных | версия 0.8a"  x:Name="mw" MinHeight="300" MinWidth="880" Width="880" Height="541">
+        Title="ILD TCP Grabber | сбор данных | версия 0.89a"  x:Name="mw" MinHeight="300" MinWidth="880" Width="880" Height="541">
     <Grid Background="#FFEEEEF2" >
         <Grid.RowDefinitions>
             <RowDefinition Height="48"/>
