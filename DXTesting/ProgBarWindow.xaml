@@ -1,0 +1,13 @@
+﻿<Window x:Class="DXTesting.ProgBarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DXTesting"
+        mc:Ignorable="d"
+        Title="ProgBarWindow" Height="65" Width="700" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <ProgressBar x:Name="progbar1" Margin="10" Value="0"/>
+        <Label x:Name="label" Content="Обработка и синхронизация..." HorizontalAlignment="Center" VerticalAlignment="Center" Height="46" Width="380" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="24"/>
+    </Grid>
+</Window>
