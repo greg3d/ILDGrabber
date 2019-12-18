@@ -5,43 +5,47 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DXTesting"
         mc:Ignorable="d"
-        Title="ILD TCP Grabber | сбор данных | версия 0.8a" Height="760" Width="900" x:Name="mw" MinHeight="600" MinWidth="800">
+        Title="ILD TCP Grabber | сбор данных | версия 0.8a"  x:Name="mw" MinHeight="300" MinWidth="880" Width="880" Height="541">
     <Grid Background="#FFEEEEF2" >
         <Grid.RowDefinitions>
-            <RowDefinition MaxHeight="48" Height="61"/>
-            <RowDefinition Height="293*" MinHeight="290"/>
-            <RowDefinition Height="218*"/>
-            <RowDefinition Height="170"/>
-            <RowDefinition Height="0*"/>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="290"/>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="150*" MinHeight="150"/>
+
+
+
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="112*"/>
-            <ColumnDefinition Width="112*"/>
+            <ColumnDefinition Width="112*" MaxWidth="130"/>
+            <ColumnDefinition Width="112*" MaxWidth="130"/>
             <ColumnDefinition Width="669*"/>
         </Grid.ColumnDefinitions>
-        <local:ChartControl x:Name="chartControl1" Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"
+        <local:ChartControl x:Name="chartControl1" Grid.Column="2" Grid.Row="1" 
                             MouseLeftButtonDown="chartControl1_MouseLeftButtonDown" 
                             MouseMove="chartControl1_MouseMove" 
                             MouseLeftButtonUp="chartControl1_MouseLeftButtonUp" 
                             MouseLeave="chartControl1_MouseLeave"
                             MouseRightButtonDown="chartControl1_MouseRightButtonDown"
-                            MouseRightButtonUp="chartControl1_MouseRightButtonUp"
+                            MouseRightButtonUp="chartControl1_MouseRightButtonUp" 
+                            Margin="0,0,0,10" Grid.RowSpan="3"
                             />
-        <Label x:Name="label" Content="{Binding Fps, ElementName=chartControl1 }" Margin="0,0,10,10" Background="LightGray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="1" HorizontalAlignment="Right" Width="23" VerticalAlignment="Bottom" Padding="0,2,0,3" FontSize="10" Height="28" RenderTransformOrigin="0.667,0.778"/>
-        <Button x:Name="ConnectButton" Content="Коннект" Margin="10,0" Click="ConnectButton_Click" BorderThickness="1" Style="{DynamicResource RoundedButton}" Grid.ColumnSpan="2" Grid.Row="1" VerticalAlignment="Top" Height="31" />
-        <Button x:Name="GrabButton" Content="Сбор" Margin="10,110,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}" RenderTransformOrigin="0.505,0.518"/>
-        <Button x:Name="StopButton" Content="Стоп" Margin="5,110,10,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>
+        <Label x:Name="label" Content="{Binding Fps, ElementName=chartControl1 }" Margin="0,10,10,10" Background="LightGray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="1" HorizontalAlignment="Right" Width="22" Padding="0,2,0,3" FontSize="10" RenderTransformOrigin="0.667,0.778"/>
+        <Button x:Name="ConnectButton" Content="Коннект" Margin="10,48,10,0" Click="ConnectButton_Click" BorderThickness="1" Style="{DynamicResource RoundedButton}" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="31" Grid.RowSpan="2" />
+        <Button x:Name="GrabButton" Content="Сбор" Margin="10,111,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}" RenderTransformOrigin="0.505,0.518"/>
+        <Button x:Name="StopButton" Content="Стоп" Margin="5,111,9,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>
 
-        <Button x:Name="SaveDataToFile" Content="Сохранить" Margin="10,0,10,10" Grid.Row="3" Height="33" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Command="{Binding SaveToFileCommand}" />
-        <StackPanel Margin="10,0,10,48" Grid.Row="3" Height="78" VerticalAlignment="Bottom" Grid.ColumnSpan="2">
+        <Label Content="Сохранение результата" Margin="10,0,9,106" Grid.Row="3" VerticalAlignment="Bottom" FontWeight="Bold" Height="26" Grid.ColumnSpan="2" Padding="0,5,5,5"/>
+
+        <Button x:Name="SaveDataToFile" Content="Сохранить" Margin="10,0,10,10" Grid.Row="3" Height="33" Command="{Binding SaveToFileCommand}" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Style="{DynamicResource RoundedButton}" />
+        <StackPanel Margin="10,0,9,28" Grid.Row="3" Height="78" VerticalAlignment="Bottom" Grid.ColumnSpan="2">
             <Label Content="Выберите формат" Padding="0,5,6,5"/>
             <RadioButton GroupName="SaveFormat" Content="CSV"  IsChecked="{ Binding CurrentFormat, Converter={StaticResource enumToBoolConverter}, ConverterParameter=csv }" />
             <RadioButton GroupName="SaveFormat" Content="TXT" IsChecked="{ Binding CurrentFormat, Converter={StaticResource enumToBoolConverter}, ConverterParameter=txt }" />
         </StackPanel>
 
-        <Label Content="Сохранение результата" Margin="10,0,10,126" Grid.Row="3" VerticalAlignment="Bottom" FontWeight="Bold" Height="26" Grid.ColumnSpan="2" Padding="0,5,5,5"/>
-        <CheckBox x:Name="checkBoxDemo" Content="DEMO" Grid.Column="2" Margin="0,16,10,16" HorizontalAlignment="Right" IsChecked="{Binding Path=Demo}" VerticalAlignment="Center" Height="16" Width="54"/>
-        <Grid Height="16" Margin="10,57,10,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
+        <CheckBox x:Name="checkBoxDemo" Content="DEMO" Grid.Column="2" Margin="0,16,8,17" HorizontalAlignment="Right" IsChecked="{Binding Path=Demo}" VerticalAlignment="Center" Height="16" Width="54"/>
+        <Grid Height="16" Margin="10,58,9,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
@@ -78,7 +82,7 @@
             <TextBlock Text="8" FontSize="8" Grid.Column="7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
 
-        <Grid Height="16" Margin="10,76,10,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
+        <Grid Height="16" Margin="10,77,9,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
@@ -98,7 +102,7 @@
             <CheckBox x:Name="checkBox7" Grid.Column="6" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
             <CheckBox x:Name="checkBox8" Grid.Column="7" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
         </Grid>
-        <Grid Grid.ColumnSpan="2" Margin="10,150,10,0" Grid.Row="1" VerticalAlignment="Top" Height="72">
+        <Grid Grid.ColumnSpan="2" Margin="10,151,9,0" Grid.Row="1" VerticalAlignment="Top" Height="72">
             <Grid.RowDefinitions>
                 <RowDefinition Height="20*"/>
                 <RowDefinition Height="30*" MinHeight="48"/>
@@ -117,11 +121,11 @@
             <Button x:Name="buttonYPlus" Content="+" Margin="0" Grid.Row="1" FontSize="20" Grid.Column="3" Style="{DynamicResource BlueButton}" Click="buttonYPlus_Click" Width="48" HorizontalAlignment="Right" VerticalAlignment="Center" Height="48"/>
 
         </Grid>
-        <Button x:Name="buttonAutoScale" Content="Автомасштаб" Margin="10,227,10,0" Grid.Row="1" FontSize="14" Style="{DynamicResource BlueButton}" VerticalAlignment="Top" Height="47" Foreground="#FF4D4D4D" Click="buttonAutoScale_Click" Grid.ColumnSpan="2"/>
-        <Label x:Name="label3" Content="Статус соединения с датчиками:" Margin="18,31,18,0" Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Top" Height="26" Width="188"/>
-        <Label x:Name="label4" Content="ILD TCP Grabber" Margin="10,0,33,0" FontSize="18" FontFamily="Segoe UI Semibold" Grid.ColumnSpan="2" Padding="0" VerticalContentAlignment="Center"/>
-        <Button x:Name="buttonOpenSettings" Content="Настройки" Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,10" Width="86" Style="{DynamicResource RoundedButton}" Click="buttonOpenSettings_Click"/>
-        <Button x:Name="buttonOpenService" Content="Сервисное меню" Grid.Column="2" HorizontalAlignment="Left" Margin="109,10,0,10" Width="127" Style="{DynamicResource RoundedButton}" Click="buttonOpenService_Click"/>
+        <Button x:Name="buttonAutoScale" Content="Автомасштаб" Margin="10,228,9,0" Grid.Row="1" FontSize="14" Style="{DynamicResource BlueButton}" VerticalAlignment="Top" Height="47" Foreground="#FF4D4D4D" Click="buttonAutoScale_Click" Grid.ColumnSpan="2"/>
+        <Label x:Name="label3" Content="Статус соединения с датчиками:" Margin="10,30,10,0" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="26" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"/>
+        <Label x:Name="label4" Content="ILD TCP Grabber" Margin="10,10,37,10" FontSize="18" FontFamily="Segoe UI Semibold" Grid.ColumnSpan="2" Padding="0" VerticalContentAlignment="Center"/>
+        <Button x:Name="buttonOpenSettings" Content="Настройки" Grid.Column="2" HorizontalAlignment="Left" Margin="11,10,0,9" Width="86" Style="{DynamicResource RoundedButton}" Click="buttonOpenSettings_Click"/>
+        <Button x:Name="buttonOpenService" Content="Сервисное меню" Grid.Column="2" HorizontalAlignment="Left" Margin="111,10,0,9" Width="126" Style="{DynamicResource RoundedButton}" Click="buttonOpenService_Click"/>
 
 
     </Grid>

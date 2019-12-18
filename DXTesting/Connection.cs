@@ -11,6 +11,8 @@ using System.Windows;
 namespace DXTesting
 
 {
+  
+
     class Connection : IDisposable
     {
         //Events and event delegates
@@ -72,7 +74,7 @@ namespace DXTesting
 
         public Connection(int id)
         {
-            client = new TcpClient();
+            
             //indicator = indi;
 
             ConnID = id;
@@ -90,6 +92,7 @@ namespace DXTesting
 
         public void Connect(int port, string srate, double mrate)
         {
+            //client = new TcpClient();
 
             Rate = mrate * 1000;
 
@@ -132,24 +135,23 @@ namespace DXTesting
                         case 0:
                             try
                             {
-                                Task connTa = client.ConnectAsync(ipaddr, port);
-                                bool result = connTa.Wait(500);
+                                client = new TcpClient();
+                                Task connTa = client.ConnectAsync(ipaddr, PortNum);
 
-                                if (result)
+                                var res = connTa.Wait(300);
+
+                                if (res)
                                 {
-
                                     IsConnected = true;
                                     localMode = 1;
-
-                                    //Notify?.Invoke(this, new ConnectionEventArgs("ConnectionSuccess", ConnID));
-
-                                }
+                                } 
                                 else
                                 {
                                     Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
 
                                     localMode = 10;
                                     IsConnected = false;
+                                    client.Close();
                                 }
                             }
 
@@ -159,12 +161,13 @@ namespace DXTesting
                                 MessageBox.Show(e.Message);
                                 localMode = 10;
                             }
+                            /*
                             catch (Exception e)
                             {
                                 Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
                                 MessageBox.Show(e.Message);
                                 localMode = 10;
-                            }
+                            }*/
 
                             break;
 
@@ -202,7 +205,7 @@ namespace DXTesting
                             {
                                 size = stream.Read(data, 0, data.Length);
                                 infoOut = infoOut + Encoding.ASCII.GetString(data, 0, size);
-                                Thread.Sleep(20);
+                                Thread.Sleep(30);
                             }
 
                             if (infoOut.Length < 1)
@@ -250,7 +253,7 @@ namespace DXTesting
                             data = new byte[16];
                             size = 0;
 
-                            Thread.Sleep(20);
+                            Thread.Sleep(50);
 
                             while (stream.DataAvailable) // пока данные есть в потоке
                             {

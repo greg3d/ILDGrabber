@@ -372,7 +372,6 @@ namespace DXTesting
                     chartControl1.DrawCursor((int)endPoint.X);
                     chartControl1.DoRedraw = true;
                 }
-
             }
         }
 
@@ -381,10 +380,8 @@ namespace DXTesting
 
             if (chartControl1.IsMouseCaptured)
             {
-
                 mouseMode = 0;
                 chartControl1.ReleaseMouseCapture();
-
             }
         }
 

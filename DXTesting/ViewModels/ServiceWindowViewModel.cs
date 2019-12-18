@@ -117,13 +117,13 @@ namespace DXTesting
                     int size = 0;
                     string infoOut = "";
 
-                    Thread.Sleep(20);
+                    Thread.Sleep(50);
 
                     while (stream.DataAvailable) // пока данные есть в потоке
                     {
                         size = stream.Read(rcvdata, 0, rcvdata.Length);
                         infoOut = infoOut + Encoding.ASCII.GetString(rcvdata, 0, size);
-                        Thread.Sleep(20);
+                        Thread.Sleep(50);
                     }
 
                     Rcvd = infoOut;

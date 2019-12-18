@@ -354,7 +354,9 @@ namespace DXTesting
             switch (format)
             {
                 case "txt":
-
+                    dlm = "\t";
+                    newline = "\r\n";
+                    bracket = "";
                     break;
                 default:
                     break;
@@ -411,6 +413,12 @@ namespace DXTesting
 
         public void ConnectAll()
         {
+
+            /*Task.Factory.StartNew(() =>
+            {
+                ConnectAllTask();
+            });*/
+            
 
             Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
             conThread.Name = "Connections thread";
