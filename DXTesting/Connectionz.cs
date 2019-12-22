@@ -187,7 +187,9 @@ namespace DXTesting
             Task.Factory.StartNew(() =>
             {
 
+                
                 SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
+
 
                 PrepareReadyList();
 
@@ -196,7 +198,7 @@ namespace DXTesting
                     cons[i].StopGrab();
                 }
                 ProgressChanged?.Invoke(new ProgressArgs(5));
-                Thread.Sleep(500);
+                Thread.Sleep(100);
                 ProgressChanged?.Invoke(new ProgressArgs(15));
 
                 float[] startTimes = new float[ReadyCount];

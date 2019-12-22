@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace DXTesting
@@ -101,8 +102,7 @@ namespace DXTesting
         private Point endPoint = new Point();
 
         int mouseMode = 0;
-
-
+        
         public MainWindow()
         {
             this.Resources["enumToBoolConverter"] = new EnumBooleanConverter();
@@ -190,14 +190,11 @@ namespace DXTesting
             bind.Path = new PropertyPath("IsVisible");
             bind.Mode = BindingMode.TwoWay;
             checkBox8.SetBinding(CheckBox.IsCheckedProperty, bind);
-
-
-
         }
 
         private void DoRedrawHandler(object sender)
         {
-            chartControl1.DoRedraw = true;
+            
         }
 
         private void ButtonsDisabling(object sender, ConzEventArgs e)
@@ -299,49 +296,45 @@ namespace DXTesting
 
         }
 
-        private void PropertyChanged(object sender, ProgressChangedEventArgs e)
-        {
-            MessageBox.Show(e.ToString());
-        }
-
         private void chartControl1_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (chartControl1.IsPostProc)
+            if (canvas2d2.IsPostProc)
             {
 
                 mouseMode = 1;
 
-                chartControl1.AutoYzoom = false;
-                startPoint = e.GetPosition(chartControl1);
-                chartControl1.CaptureMouse();
-                chartControl1.DoRedraw = true;
-            }
+                canvas2d2.AutoYzoom = false;
+                startPoint = e.GetPosition(canvas2d2);
+                canvas2d2.CaptureMouse();
+                canvas2d2.DoRedraw = true;
+          }
 
         }
 
         private void chartControl1_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            if (chartControl1.IsMouseCaptured)
+            
+            if (canvas2d2.IsMouseCaptured)
             {
                 if (mouseMode == 1)
                 {
-                    endPoint = e.GetPosition(chartControl1);
+                    endPoint = e.GetPosition(canvas2d2);
 
-                    var w = chartControl1.ActualWidth;
-                    var k = (chartControl1.xMax - chartControl1.xMin) / w;
-                    chartControl1.xMin = (float)(chartControl1.xMin - k * (endPoint.X - startPoint.X));
-                    chartControl1.xMax = (float)(chartControl1.xMax - k * (endPoint.X - startPoint.X));
-                    chartControl1.DoRedraw = true;
+                    var w = canvas2d2.ActualWidth;
+                    var k = (canvas2d2.xMax - canvas2d2.xMin) / w;
+                    canvas2d2.xMin = (float)(canvas2d2.xMin - k * (endPoint.X - startPoint.X));
+                    canvas2d2.xMax = (float)(canvas2d2.xMax - k * (endPoint.X - startPoint.X));
+                    //canvas2d2.DoRedraw();
 
-                    startPoint = e.GetPosition(chartControl1);
+                    startPoint = e.GetPosition(canvas2d2);
                 }
 
                 if (mouseMode == 2)
                 {
-                    endPoint = e.GetPosition(chartControl1);
+                    endPoint = e.GetPosition(canvas2d2);
 
 
-                    foreach (var plot in chartControl1.plotList)
+                    foreach (var plot in canvas2d2.plotList)
                     {
                         if (superStartPoint.Y < plot.y2 && superStartPoint.Y > plot.y1)
                         {
@@ -352,13 +345,13 @@ namespace DXTesting
                             plot.yMax = (float)(plot.yMax + k * (endPoint.Y - startPoint.Y));
 
 
-                            chartControl1.DoRedraw = true;
+                            //canvas2d2.DoRedraw();
                         }
                     }
 
 
 
-                    startPoint = e.GetPosition(chartControl1);
+                    startPoint = e.GetPosition(canvas2d2);
                 }
 
 
@@ -366,11 +359,11 @@ namespace DXTesting
 
             else
             {
-                if (chartControl1.IsPostProc)
+                if (canvas2d2.IsPostProc)
                 {
-                    endPoint = e.GetPosition(chartControl1);
-                    chartControl1.DrawCursor((int)endPoint.X);
-                    chartControl1.DoRedraw = true;
+                    endPoint = e.GetPosition(canvas2d2);
+                    //c2d.DrawCursor((int)endPoint.X);
+                   // c2d.DoRedraw();
                 }
             }
         }
@@ -378,10 +371,10 @@ namespace DXTesting
         private void chartControl1_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
 
-            if (chartControl1.IsMouseCaptured)
+            if (canvas2d2.IsMouseCaptured)
             {
                 mouseMode = 0;
-                chartControl1.ReleaseMouseCapture();
+                canvas2d2.ReleaseMouseCapture();
             }
         }
 
@@ -392,76 +385,76 @@ namespace DXTesting
 
         private void chartControl1_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            chartControl1.DrawCursor(-1);
-            chartControl1.DoRedraw = true;
+           // chartControl1.DrawCursor(-1);
+           // chartControl1.DoRedraw = true;
         }
 
         private void buttonYPlus_Click(object sender, RoutedEventArgs e)
         {
-            if (chartControl1.IsPostProc)
-            {
-                chartControl1.ScaleY(1);
-                chartControl1.DoRedraw = true;
-            }
+         //   if (chartControl1.IsPostProc)
+         //   {
+          //      chartControl1.ScaleY(1);
+          //      chartControl1.DoRedraw = true;
+          //  }
         }
 
         private void buttonYMinus_Click(object sender, RoutedEventArgs e)
         {
-            if (chartControl1.IsPostProc)
-            {
+         //   if (chartControl1.IsPostProc)
+           // {
 
-                chartControl1.ScaleY(-1);
-                chartControl1.DoRedraw = true;
-            }
+          //      chartControl1.ScaleY(-1);
+          //      chartControl1.DoRedraw = true;
+           // }
         }
 
         private void buttonXPlus_Click(object sender, RoutedEventArgs e)
         {
-            if (chartControl1.IsPostProc)
-            {
+           // if (chartControl1.IsPostProc)
+           // {
 
-                chartControl1.ScaleX(1);
-                chartControl1.DoRedraw = true;
-            }
+           //     chartControl1.ScaleX(1);
+                //chartControl1.DoRedraw = true;
+           // }
         }
 
         private void buttonXMinus_Click(object sender, RoutedEventArgs e)
         {
-            if (chartControl1.IsPostProc)
-            {
-                chartControl1.ScaleX(-1);
-                chartControl1.DoRedraw = true;
-            }
+           // if (chartControl1.IsPostProc)
+           // {
+           //     chartControl1.ScaleX(-1);
+           //     chartControl1.DoRedraw = true;
+          //  }
         }
 
         private void chartControl1_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (chartControl1.IsPostProc)
-            {
+          //  if (chartControl1.IsPostProc)
+           // {
 
-                mouseMode = 2;
+         //       mouseMode = 2;
 
-                chartControl1.AutoYzoom = false;
+                //chartControl1.AutoYzoom = false;
 
-                startPoint = e.GetPosition(chartControl1);
-                superStartPoint = e.GetPosition(chartControl1);
-                chartControl1.CaptureMouse();
-            }
+           //     startPoint = e.GetPosition(chartControl1);
+            //    superStartPoint = e.GetPosition(chartControl1);
+                //chartControl1.CaptureMouse();
+          //  }
         }
 
         private void chartControl1_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (chartControl1.IsMouseCaptured)
-            {
-                mouseMode = 0;
-                chartControl1.ReleaseMouseCapture();
-            }
+          //  if (chartControl1.IsMouseCaptured)
+          //  {
+          //      mouseMode = 0;
+          //      chartControl1.ReleaseMouseCapture();
+          //  }
         }
 
         private void buttonAutoScale_Click(object sender, RoutedEventArgs e)
         {
-            chartControl1.AutoYzoom = true;
-            chartControl1.DoRedraw = true;
+          //  chartControl1.AutoYzoom = true;
+          //  chartControl1.DoRedraw = true;
         }
 
         private void buttonOpenSettings_Click(object sender, RoutedEventArgs e)

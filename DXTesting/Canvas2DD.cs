@@ -1,11 +1,17 @@
-﻿using SharpDX.Direct2D1;
-using SharpDX.DirectWrite;
-using SharpDX.Mathematics.Interop;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace DXTesting
 {
-    class Plot
+
+    public class Plot
     {
         public float x1;
         public float x2;
@@ -15,9 +21,6 @@ namespace DXTesting
         public float xMax;
         public float yMin;
         public float yMax;
-
-        //public int Index;
-        //public bool visible;
 
         public Plot()
         {
@@ -30,10 +33,16 @@ namespace DXTesting
             yMin = 0;
             yMax = 0;
         }
-
     }
-    class ChartControl : G2dControl
+
+    public partial class Canvas2DD : Canvas
     {
+        public const int NROWS = 20;
+        public const int NCOLS = 5;
+      
+        //private readonly Stopwatch renderTimer = new Stopwatch();
+        //private Queue<int> frameCountHist = new Queue<int>();
+
         public bool DoRedraw = false;
         public bool IsPostProc = false;
         public bool IsGrabbing = false;
@@ -65,6 +74,14 @@ namespace DXTesting
 
         bool autoYzoom = true;
 
+        private SolidColorBrush bgMain;
+        private SolidColorBrush bgPlot;
+        private SolidColorBrush strokePlot;
+        private SolidColorBrush strokeData;
+        private SolidColorBrush strokeTick;
+
+        //public Dictionary<string, SolidColorBrush> canvasBrushes;
+
         public bool AutoYzoom
         {
             get
@@ -76,102 +93,64 @@ namespace DXTesting
                 autoYzoom = value;
             }
         }
-
-
-        public ChartControl()
+        
+        
+        public Canvas2DD()
         {
-            resCache.Add("BlueBrush", t => new SolidColorBrush(t, new RawColor4(0.0f, 0.0f, 1.0f, 1.0f)));
-            resCache.Add("BlackBrush", t => new SolidColorBrush(t, new RawColor4(0.0f, 0.0f, 0.0f, 1.0f)));
-            resCache.Add("HelperBrush", t => new SolidColorBrush(t, new RawColor4(0.2f, 0.2f, 0.2f, 0.7f)));
-            resCache.Add("SemiTransparentBrush", t => new SolidColorBrush(t, new RawColor4(0.2f, 0.2f, 0.2f, 0.3f)));
-
-        }
-
-        private void drawText(string text, ref TextFormat format, ref Brush brush, ref RenderTarget t, float x, float y)
-        {
-
-            float w = text.Length * format.FontSize;
-            format.WordWrapping = WordWrapping.NoWrap;
-
-            float x1;
-            float x2;
-            float y1;
-            float y2;
-
-            switch (format.ParagraphAlignment)
+            bgPlot = new SolidColorBrush(new Color
             {
-                case ParagraphAlignment.Near:
-                    y1 = y;
-                    y2 = y + format.FontSize * 1.5f;
-                    break;
-                case ParagraphAlignment.Far:
-                    y1 = y - format.FontSize * 1.5f;
-                    y2 = y;
-                    break;
-                case ParagraphAlignment.Center:
-                    y1 = y - format.FontSize * 1.5f / 2;
-                    y2 = y + format.FontSize * 1.5f / 2;
-                    break;
-                default:
-                    y1 = y - format.FontSize * 1.5f / 2;
-                    y2 = y + format.FontSize * 1.5f / 2;
-                    break;
-            }
+                R = 255,
+                G = 255,
+                B = 255,
+                A = 255
+            });
 
-            switch (format.TextAlignment)
+            bgPlot = new SolidColorBrush(new Color
             {
-                case TextAlignment.Leading:
-                    x1 = x;
-                    x2 = x + w;
-                    break;
-                case TextAlignment.Trailing:
-                    x1 = x - w;
-                    x2 = x;
-                    break;
-                case TextAlignment.Center:
-                    x1 = x - w / 2;
-                    x2 = x + w / 2;
-                    break;
-                default:
-                    x1 = x;
-                    x2 = x + w;
-                    break;
-            }
-
-            t.DrawText(text, format, new RawRectangleF(x1, y1, x2, y2), brush);
-
+                R = 220,
+                G = 220,
+                B = 220,
+                A = 255
+            });
+            
+            strokePlot = new SolidColorBrush(new Color
+            {
+                R = 180,
+                G = 180,
+                B = 180,
+                A = 255
+            });
         }
+        
 
-        private RawVector2 PointToCanvas(Plot curPlot, float x, float y)
+        private Point Normalize(Plot curPlot, double x, double y)
         {
-            RawVector2 retVec = new RawVector2();
+            Point retVec = new Point();
+
 
             if (x < curPlot.xMin || x > curPlot.xMax || y < curPlot.yMin || y > curPlot.yMax)
             {
-                x = Single.NaN;
-                y = Single.NaN;
+                x = Double.NaN;
+                y = Double.NaN;
             }
 
             retVec.X = curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin);
             retVec.Y = curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin);
-
             return retVec;
         }
 
-        private RawVector2 PointToCanvasN(Plot curPlot, float x, float y)
+        private Point NormalizeN(Plot curPlot, double x, double y)
         {
-            RawVector2 retVec = new RawVector2();
-
-
-            retVec.X = curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin);
-            retVec.Y = curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin);
-
+            Point retVec = new Point
+            {
+                X = curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin),
+                Y = curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin)
+            };
             return retVec;
         }
 
         public void ScaleY(int sign)
         {
-
             foreach (var item in plotList)
             {
                 if (sign > 0)
@@ -188,14 +167,11 @@ namespace DXTesting
                     item.yMin = item.yMin - xx / 20;
                     item.yMax = item.yMax + xx / 20;
                 }
-
             }
-
         }
 
         public void ScaleX(int sign)
         {
-
             if (sign > 0)
             {
                 var xx = xMax - xMin;
@@ -210,7 +186,6 @@ namespace DXTesting
                 xMin = xMin - xx / 20;
                 xMax = xMax + xx / 20;
             }
-
         }
 
         private float OptimalSpacing(double original)
@@ -288,47 +263,25 @@ namespace DXTesting
 
         }
 
-        //private void Redraw()
 
-        public void DrawCursor(int x)
+        protected override void OnRender(DrawingContext dc)
         {
-            if (_cursor != x)
-            {
-                _cursor = x;
-            }
 
+           
+            
+            Redraw(ref dc);
+            
+            base.OnRender(dc);
         }
-
-        public override void Render(RenderTarget target)
+        public void Redraw(ref DrawingContext dc)
         {
-            //RenderWait = 2;
 
-            target.AntialiasMode = AntialiasMode.Aliased;
-
-            //target.AntialiasMode = AntialiasMode.Aliased;
-
-            Brush brushblack = resCache["BlackBrush"] as Brush;
-            Brush helperBrush = resCache["HelperBrush"] as Brush;
-            Brush blueBrush = resCache["BlueBrush"] as Brush;
-            Brush transparentBrush = resCache["SemiTransparentBrush"] as Brush;
-
-            var labelTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", 10)
-            {
-                ParagraphAlignment = ParagraphAlignment.Far,
-                TextAlignment = TextAlignment.Center
-            };
-
-            var headerTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", FontWeight.Bold, FontStyle.Normal, 12)
-            {
-                ParagraphAlignment = ParagraphAlignment.Far,
-                TextAlignment = TextAlignment.Center
-            };
-
-
+           
             Connectionz conz = Connectionz.getInstance();
 
-            if (conz.ReadyCount > 0 && DoRedraw)
+            if (conz.ReadyCount > 0)
             {
+                dc.DrawRectangle(bgPlot, new Pen(bgPlot, 1), new Rect(5, 5, 100, 100));
                 //int ind = 0;
                 IsGrabbing = true;
                 IsPostProc = true;
@@ -355,7 +308,6 @@ namespace DXTesting
                     oldVisibleCount = visibleCount;
                 }
 
-                target.Clear(new RawColor4(1.0f, 1.0f, 1.0f, 1.0f));
                 plotHeight = (float)Math.Round(ActualHeight / visibleCount);
 
                 int i = 0;
@@ -371,9 +323,25 @@ namespace DXTesting
                         curPlot.y1 = yy + i * plotHeight + marginTop;
                         curPlot.y2 = yy + i * plotHeight + plotHeight - marginBottom;
 
-                        RawRectangleF PlotArea = new RawRectangleF(curPlot.x1, curPlot.y1, curPlot.x2, curPlot.y2);
-                        target.DrawRectangle(PlotArea, helperBrush, 1.0f);
 
+
+                        //Polygon PlotArea = new Polygon
+                        //{
+                        //    Stroke = plotstroke,
+                        //    Fill = plotbg
+                        //};
+
+                        //PlotArea.Points.Add(new Point(curPlot.x1, curPlot.y1));
+                        //PlotArea.Points.Add(new Point(curPlot.x2, curPlot.y1));
+                        //PlotArea.Points.Add(new Point(curPlot.x2, curPlot.y2));
+                        //PlotArea.Points.Add(new Point(curPlot.x1, curPlot.y2));
+                        //PlotArea.Points.Add(new Point(curPlot.x1, curPlot.y1));
+                        //canvas.Children.Add(PlotArea);
+
+                        dc.DrawRectangle(bgPlot, new Pen(bgPlot, 1), new Rect(5, 5, 100, 100));
+                        dc.DrawRectangle(bgPlot, new Pen(bgPlot, 1), new Rect(curPlot.x1, curPlot.y1, curPlot.x1 + curPlot.x2, curPlot.y1 + curPlot.y2));
+
+        
                         float tickGapX = 5f; //sec
 
                         float tickGapY = 10f; //mm
@@ -420,67 +388,112 @@ namespace DXTesting
                         float yStart = (float)Math.Ceiling(curPlot.yMin / tickGapY) * tickGapY;
                         float yEnd = (float)Math.Floor(curPlot.yMax / tickGapY) * tickGapY;
 
-                        labelTextFormat.TextAlignment = TextAlignment.Center;
-                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+                        //labelTextFormat.TextAlignment = TextAlignment.Center;
+                        //labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
 
                         // рисуем тики X
                         for (var k = xStart - tickGapX; k < xEnd + tickGapX; k = k + tickGapX)
                         {
+                           // Polyline line = new Polyline
+                           // {
+                                //Stroke = plotstroke
+                          //  };
 
-                            RawVector2 tickPoint = PointToCanvasN(curPlot, k, 0);
-                            RawVector2 point1 = new RawVector2(tickPoint.X, curPlot.y2 - 2);
-                            RawVector2 point2 = new RawVector2(tickPoint.X, curPlot.y1 + 2);
-                            target.DrawLine(point1, point2, helperBrush);
-                            drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
+                            Point st = NormalizeN(curPlot, k, 0);
+                            Point p1 = new Point(st.X, curPlot.y2 - 2);
+                            Point p2 = new Point(st.X, curPlot.y1 + 2);
+
+
+                            if ((st.X > curPlot.x1) & (st.X < curPlot.x2))
+                            {
+
+                               // line.Points.Add(p1);
+                                //line.Points.Add(p2);
+
+                                //canvas.Children.Add(line);
+                            }
+
+                            // target.DrawLine(point1, point2, helperBrush);
+                            // drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
                         }
 
-                        //  рисуем тики для Y 
-                        labelTextFormat.TextAlignment = TextAlignment.Leading;
-                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
+                        // рисуем тики для Y 
+                        // labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        // labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
                         for (var k = yStart - tickGapY; k < yEnd + tickGapY; k = k + tickGapY)
                         {
-                            RawVector2 tickPoint = PointToCanvasN(curPlot, data.X[(int)N - 1], k);
-                            RawVector2 point1 = new RawVector2(curPlot.x1 + 1, tickPoint.Y);
-                            RawVector2 point2 = new RawVector2(curPlot.x2 + 1, tickPoint.Y);
 
-                            if ((tickPoint.Y > curPlot.y1) & (tickPoint.Y < curPlot.y2))
+                           // Polyline line = new Polyline
+                           // {
+                           //     Stroke = plotstroke
+                           // };
+
+                            Point st = NormalizeN(curPlot, data.X[(int)N - 1], k);
+                            Point p1 = new Point(curPlot.x1 + 1, st.Y);
+                            Point p2 = new Point(curPlot.x2 - 1, st.Y);
+
+                            if ((st.Y > curPlot.y1) & (st.Y < curPlot.y2))
                             {
-                                target.DrawLine(point1, point2, transparentBrush);
-                                drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                            //    line.Points.Add(p1);
+                             //   line.Points.Add(p2);
+
+                               // canvas.Children.Add(line);
+
+                                //      drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
                             }
                         }
 
-                        labelTextFormat.TextAlignment = TextAlignment.Leading;
-                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
+                        //   labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        //  labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
                         // рисуем значения yMax и yMin
-                        drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
-                        drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
-
-
-
-
+                        // drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
+                        // drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
 
 
                         float cursorVal = 0;
 
+                        //Polyline dataseries = new Polyline();
+                        //dataseries.Stroke = Brushes.Blue;
+
                         // Рисуем сам график
-                        for (int jjj = 0; jjj < N - step; jjj = jjj + step)
+                        for (int jjj = 0; jjj < N; jjj = jjj + step)
                         {
-                            RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
-                            RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
-                            target.DrawLine(stPoint, endPoint, blueBrush);
+
+                            Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj]);
+                            //Point endPoint = Normalize(curPlot, data.X[jjj], data.Y[jjj]);
+
+                            //dataseries.Points.Add(pt);
+
+                            //   RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
+                            //   RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
+                            //   target.DrawLine(stPoint, endPoint, blueBrush);
 
                             // РИСУЕМ КУРСОР 
-                            if (_cursor > 0 && _cursor == Math.Round(stPoint.X))
+                            if (_cursor > 0 && _cursor == Math.Round(pt.X))
                             {
-                                RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
-                                RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
-                                target.DrawLine(stPoint2, endPoint2, brushblack);
+                                Point p1 = new Point(_cursor, curPlot.y1 + 1);
+                                Point p2 = new Point(_cursor, curPlot.y2 - 1);
+
+                                //Line line = new Line
+                                //{
+                                  //  X1 = p1.X,
+                                   // X2 = p2.X,
+                                   // Y1 = p1.Y,
+                                   // Y2 = p2.Y,
+                                   // Stroke = Brushes.Black
+                                //};
+
+                                //canvas.Children.Add(line);
+                                //     RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
+                                //     RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
+                                //      target.DrawLine(stPoint2, endPoint2, brushblack);
                                 cursorVal = data.Y[jjj];
                             }
                         }
+
+                        //canvas.Children.Add(dataseries);
 
 
                         // рисуем текущее значение
@@ -495,18 +508,18 @@ namespace DXTesting
                             curVal = cursorVal.ToString("F3");
                         }
 
-                        headerTextFormat.TextAlignment = TextAlignment.Trailing;
-                        headerTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+                        //  headerTextFormat.TextAlignment = TextAlignment.Trailing;
+                        // headerTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
 
-                        drawText(curVal, ref headerTextFormat, ref brushblack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
+                        // drawText(curVal, ref headerTextFormat, ref brushblack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
 
 
                         // рисуем вспомогательное 
-                        labelTextFormat.TextAlignment = TextAlignment.Leading;
-                        headerTextFormat.TextAlignment = TextAlignment.Leading;
-                        labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-                        drawText((con.ConnID + 1).ToString(), ref headerTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 2);
-                        drawText(con.Serial, ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 12, curPlot.y1 + 4);
+                        // labelTextFormat.TextAlignment = TextAlignment.Leading;
+                        // headerTextFormat.TextAlignment = TextAlignment.Leading;
+                        // labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
+                        //  drawText((con.ConnID + 1).ToString(), ref headerTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 2);
+                        //  drawText(con.Serial, ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 12, curPlot.y1 + 4);
 
                         i++;
                     }
@@ -518,11 +531,8 @@ namespace DXTesting
                     autoYzoom = false;
                 }
 
-                DoRedraw = false;
+                //DoRedraw = false;
             }
-
-            //labelTextFormat.Dispose();
-
         }
     }
 }
