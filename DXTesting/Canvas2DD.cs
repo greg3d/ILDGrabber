@@ -4,9 +4,11 @@ using System.Text;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Threading;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
+using System.Drawing;
+using System.Windows.Media.Imaging;
 
 namespace DXTesting
 {
@@ -35,11 +37,11 @@ namespace DXTesting
         }
     }
 
-    public partial class Canvas2DD : Canvas
+    public class Canvas2DD : Canvas
     {
         public const int NROWS = 20;
         public const int NCOLS = 5;
-      
+       
         //private readonly Stopwatch renderTimer = new Stopwatch();
         //private Queue<int> frameCountHist = new Queue<int>();
 
@@ -93,11 +95,21 @@ namespace DXTesting
                 autoYzoom = value;
             }
         }
-        
-        
+
+        public void DrawCursor(int x)
+        {
+            if (_cursor != x)
+            {
+                _cursor = x;
+            }
+
+        }
+
         public Canvas2DD()
         {
-            bgPlot = new SolidColorBrush(new Color
+      
+
+            bgMain = new SolidColorBrush(new Color
             {
                 R = 255,
                 G = 255,
@@ -118,6 +130,14 @@ namespace DXTesting
                 R = 180,
                 G = 180,
                 B = 180,
+                A = 255
+            });
+
+            strokeTick = new SolidColorBrush(new Color
+            {
+                R = 130,
+                G = 130,
+                B = 130,
                 A = 255
             });
         }
@@ -263,26 +283,22 @@ namespace DXTesting
 
         }
 
+        public void Redraw()
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                DoRedraw = true;
+                InvalidateVisual();
+            }, DispatcherPriority.Render); //, DispatcherPriority.Render
+        }
 
         protected override void OnRender(DrawingContext dc)
         {
-
-           
-            
-            Redraw(ref dc);
-            
-            base.OnRender(dc);
-        }
-        public void Redraw(ref DrawingContext dc)
-        {
-
-           
             Connectionz conz = Connectionz.getInstance();
 
-            if (conz.ReadyCount > 0)
+            if (conz.ReadyCount > 0 && ActualWidth > 0)
             {
-                dc.DrawRectangle(bgPlot, new Pen(bgPlot, 1), new Rect(5, 5, 100, 100));
-                //int ind = 0;
+                
                 IsGrabbing = true;
                 IsPostProc = true;
 
@@ -324,26 +340,11 @@ namespace DXTesting
                         curPlot.y2 = yy + i * plotHeight + plotHeight - marginBottom;
 
 
+                        //MessageBox.Show(ActualWidth.ToString());
 
-                        //Polygon PlotArea = new Polygon
-                        //{
-                        //    Stroke = plotstroke,
-                        //    Fill = plotbg
-                        //};
+                        dc.DrawRectangle(bgPlot, new Pen(strokePlot, 1), new Rect(curPlot.x1, curPlot.y1, curPlot.x2 - curPlot.x1, curPlot.y2 - curPlot.y1));
 
-                        //PlotArea.Points.Add(new Point(curPlot.x1, curPlot.y1));
-                        //PlotArea.Points.Add(new Point(curPlot.x2, curPlot.y1));
-                        //PlotArea.Points.Add(new Point(curPlot.x2, curPlot.y2));
-                        //PlotArea.Points.Add(new Point(curPlot.x1, curPlot.y2));
-                        //PlotArea.Points.Add(new Point(curPlot.x1, curPlot.y1));
-                        //canvas.Children.Add(PlotArea);
-
-                        dc.DrawRectangle(bgPlot, new Pen(bgPlot, 1), new Rect(5, 5, 100, 100));
-                        dc.DrawRectangle(bgPlot, new Pen(bgPlot, 1), new Rect(curPlot.x1, curPlot.y1, curPlot.x1 + curPlot.x2, curPlot.y1 + curPlot.y2));
-
-        
                         float tickGapX = 5f; //sec
-
                         float tickGapY = 10f; //mm
 
                         RealData data;
@@ -354,7 +355,6 @@ namespace DXTesting
                             autoYzoom = true;
                         }
                         else
-                        // if (IsPostProc)
                         {
                             data = con.rdata;
 
@@ -367,7 +367,6 @@ namespace DXTesting
                             var ySpacing = 20 / yScale;
 
                             tickGapY = OptimalSpacing(ySpacing);
-
                         }
 
                         DoAutoScale(ref data.X, ref data.Y, ref curPlot, autoYzoom);
@@ -388,87 +387,59 @@ namespace DXTesting
                         float yStart = (float)Math.Ceiling(curPlot.yMin / tickGapY) * tickGapY;
                         float yEnd = (float)Math.Floor(curPlot.yMax / tickGapY) * tickGapY;
 
-                        //labelTextFormat.TextAlignment = TextAlignment.Center;
-                        //labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-
                         // рисуем тики X
                         for (var k = xStart - tickGapX; k < xEnd + tickGapX; k = k + tickGapX)
-                        {
-                           // Polyline line = new Polyline
-                           // {
-                                //Stroke = plotstroke
-                          //  };
-
+                        { 
                             Point st = NormalizeN(curPlot, k, 0);
                             Point p1 = new Point(st.X, curPlot.y2 - 2);
                             Point p2 = new Point(st.X, curPlot.y1 + 2);
-
-
+                            
                             if ((st.X > curPlot.x1) & (st.X < curPlot.x2))
                             {
-
-                               // line.Points.Add(p1);
-                                //line.Points.Add(p2);
-
-                                //canvas.Children.Add(line);
+                                dc.DrawLine(new Pen(bgMain, 1), p1, p2);
+                                
+                                var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
+                                ttext.TextAlignment = TextAlignment.Center;
+                                dc.DrawText(ttext, new Point(st.X, curPlot.y2 + 2));
                             }
-
-                            // target.DrawLine(point1, point2, helperBrush);
-                            // drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
                         }
 
                         // рисуем тики для Y 
-                        // labelTextFormat.TextAlignment = TextAlignment.Leading;
-                        // labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
                         for (var k = yStart - tickGapY; k < yEnd + tickGapY; k = k + tickGapY)
                         {
-
-                           // Polyline line = new Polyline
-                           // {
-                           //     Stroke = plotstroke
-                           // };
-
                             Point st = NormalizeN(curPlot, data.X[(int)N - 1], k);
                             Point p1 = new Point(curPlot.x1 + 1, st.Y);
                             Point p2 = new Point(curPlot.x2 - 1, st.Y);
 
                             if ((st.Y > curPlot.y1) & (st.Y < curPlot.y2))
                             {
-                            //    line.Points.Add(p1);
-                             //   line.Points.Add(p2);
+                                var pen = new Pen(bgMain, 1);
+                                pen.DashStyle = DashStyles.Dot;
 
-                               // canvas.Children.Add(line);
+                                dc.DrawLine(pen, p1, p2);
 
-                                //      drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                                var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
+                                ttext.TextAlignment = TextAlignment.Left;
+                                dc.DrawText(ttext, new Point(p2.X + 3, p2.Y ));
                             }
                         }
-
-                        //   labelTextFormat.TextAlignment = TextAlignment.Leading;
-                        //  labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
                         // рисуем значения yMax и yMin
                         // drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
                         // drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
 
-
                         float cursorVal = 0;
-
-                        //Polyline dataseries = new Polyline();
-                        //dataseries.Stroke = Brushes.Blue;
-
+                        
+                       
                         // Рисуем сам график
-                        for (int jjj = 0; jjj < N; jjj = jjj + step)
+                        for (int jjj = 0; jjj < N-step; jjj = jjj + step)
                         {
 
                             Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj]);
-                            //Point endPoint = Normalize(curPlot, data.X[jjj], data.Y[jjj]);
+                            Point pt2 = NormalizeN(curPlot, data.X[jjj+step], data.Y[jjj+step]);
 
-                            //dataseries.Points.Add(pt);
-
-                            //   RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
-                            //   RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
-                            //   target.DrawLine(stPoint, endPoint, blueBrush);
+                            dc.DrawLine(new Pen(strokeData, 1), pt, pt2);
 
                             // РИСУЕМ КУРСОР 
                             if (_cursor > 0 && _cursor == Math.Round(pt.X))
@@ -476,25 +447,16 @@ namespace DXTesting
                                 Point p1 = new Point(_cursor, curPlot.y1 + 1);
                                 Point p2 = new Point(_cursor, curPlot.y2 - 1);
 
-                                //Line line = new Line
-                                //{
-                                  //  X1 = p1.X,
-                                   // X2 = p2.X,
-                                   // Y1 = p1.Y,
-                                   // Y2 = p2.Y,
-                                   // Stroke = Brushes.Black
-                                //};
-
                                 //canvas.Children.Add(line);
                                 //     RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
                                 //     RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
                                 //      target.DrawLine(stPoint2, endPoint2, brushblack);
+
+                                dc.DrawLine(new Pen(Brushes.Black, 1), p1, p2);
+
                                 cursorVal = data.Y[jjj];
                             }
                         }
-
-                        //canvas.Children.Add(dataseries);
-
 
                         // рисуем текущее значение
 
@@ -508,11 +470,12 @@ namespace DXTesting
                             curVal = cursorVal.ToString("F3");
                         }
 
-                        //  headerTextFormat.TextAlignment = TextAlignment.Trailing;
-                        // headerTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-
                         // drawText(curVal, ref headerTextFormat, ref brushblack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
+                        var text = new FormattedText(curVal, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 12, Brushes.Black);
+                        text.TextAlignment = TextAlignment.Right;
+                        text.SetFontWeight(FontWeights.Bold);
 
+                        dc.DrawText(text, new Point(curPlot.x2 - 4, curPlot.y1 + 2));
 
                         // рисуем вспомогательное 
                         // labelTextFormat.TextAlignment = TextAlignment.Leading;
@@ -531,8 +494,13 @@ namespace DXTesting
                     autoYzoom = false;
                 }
 
-                //DoRedraw = false;
+                
+                DoRedraw = false;
             }
+
+
+            //base.OnRender(dc);
         }
+
     }
 }
