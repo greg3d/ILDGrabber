@@ -190,9 +190,6 @@ namespace DXTesting
             bind.Path = new PropertyPath("IsVisible");
             bind.Mode = BindingMode.TwoWay;
             checkBox8.SetBinding(CheckBox.IsCheckedProperty, bind);
-
-
-
         }
 
         private void DoRedrawHandler(object sender)

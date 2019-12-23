@@ -61,6 +61,9 @@ namespace DXTesting
 
         public Plot[] plotList;
 
+        private TextFormat labelTextFormat;
+        private TextFormat headerTextFormat;
+
         // float nPoints = 5000;
 
         bool autoYzoom = true;
@@ -77,14 +80,26 @@ namespace DXTesting
             }
         }
 
-
         public ChartControl()
         {
-            resCache.Add("BlueBrush", t => new SolidColorBrush(t, new RawColor4(0.0f, 0.0f, 1.0f, 1.0f)));
-            resCache.Add("BlackBrush", t => new SolidColorBrush(t, new RawColor4(0.0f, 0.0f, 0.0f, 1.0f)));
-            resCache.Add("HelperBrush", t => new SolidColorBrush(t, new RawColor4(0.2f, 0.2f, 0.2f, 0.7f)));
-            resCache.Add("SemiTransparentBrush", t => new SolidColorBrush(t, new RawColor4(0.2f, 0.2f, 0.2f, 0.3f)));
+            resCache.Add("BrushBlack",      t => new SolidColorBrush(t, new RawColor4(0f, 0f, 0f, 1f)));
+            resCache.Add("BrushData",       t => new SolidColorBrush(t, new RawColor4(0f, 0.0f, 1f, 1f)));
+            resCache.Add("BrushTickX",      t => new SolidColorBrush(t, new RawColor4(1f, 1f, 1f, 1f)));
+            resCache.Add("BrushTickY",      t => new SolidColorBrush(t, new RawColor4(0.2f, 0.2f, 0.2f, 0.2f)));
+            resCache.Add("BrushPlotBG",     t => new SolidColorBrush(t, new RawColor4(0.95f, 0.95f, 0.9f, 1f)));
+            resCache.Add("BrushPlotStroke", t => new SolidColorBrush(t, new RawColor4(0.8f, 0.8f, 0.8f, 1f)));
 
+            labelTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", 10)
+            {
+                ParagraphAlignment = ParagraphAlignment.Far,
+                TextAlignment = TextAlignment.Center
+            };
+
+            headerTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", FontWeight.Bold, FontStyle.Normal, 12)
+            {
+                ParagraphAlignment = ParagraphAlignment.Far,
+                TextAlignment = TextAlignment.Center
+            };
         }
 
         private void drawText(string text, ref TextFormat format, ref Brush brush, ref RenderTarget t, float x, float y)
@@ -288,8 +303,6 @@ namespace DXTesting
 
         }
 
-        //private void Redraw()
-
         public void DrawCursor(int x)
         {
             if (_cursor != x)
@@ -301,29 +314,15 @@ namespace DXTesting
 
         public override void Render(RenderTarget target)
         {
-            //RenderWait = 2;
+            target.AntialiasMode = AntialiasMode.PerPrimitive;
 
-            target.AntialiasMode = AntialiasMode.Aliased;
-
-            //target.AntialiasMode = AntialiasMode.Aliased;
-
-            Brush brushblack = resCache["BlackBrush"] as Brush;
-            Brush helperBrush = resCache["HelperBrush"] as Brush;
-            Brush blueBrush = resCache["BlueBrush"] as Brush;
-            Brush transparentBrush = resCache["SemiTransparentBrush"] as Brush;
-
-            var labelTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", 10)
-            {
-                ParagraphAlignment = ParagraphAlignment.Far,
-                TextAlignment = TextAlignment.Center
-            };
-
-            var headerTextFormat = new TextFormat(new SharpDX.DirectWrite.Factory(), "Arial", FontWeight.Bold, FontStyle.Normal, 12)
-            {
-                ParagraphAlignment = ParagraphAlignment.Far,
-                TextAlignment = TextAlignment.Center
-            };
-
+            // brushes
+            Brush brushBlack = resCache["BrushBlack"] as Brush;
+            Brush brushData  = resCache["BrushData"] as Brush;
+            Brush brushTickX = resCache["BrushTickX"] as Brush;
+            Brush brushTickY = resCache["BrushTickY"] as Brush;
+            Brush brushPlotBG = resCache["BrushPlotBG"] as Brush;
+            Brush brushPlotStroke = resCache["BrushPlotStroke"] as Brush;
 
             Connectionz conz = Connectionz.getInstance();
 
@@ -355,7 +354,12 @@ namespace DXTesting
                     oldVisibleCount = visibleCount;
                 }
 
+                // Очистка всего поля
                 target.Clear(new RawColor4(1.0f, 1.0f, 1.0f, 1.0f));
+                RawRectangleF clearRect = new RawRectangleF(0, 0, (float)ActualWidth, (float)ActualHeight);
+                target.FillRectangle(clearRect, new SolidColorBrush(target, new RawColor4(1f, 1f, 1f, 1f)));
+
+                // высота области графика
                 plotHeight = (float)Math.Round(ActualHeight / visibleCount);
 
                 int i = 0;
@@ -363,21 +367,23 @@ namespace DXTesting
                 {
                     if (con.IsReady && con.IsVisible && (IsGrabbing ^ IsPostProc))
                     {
-
                         var curPlot = plotList[i];
 
                         curPlot.x1 = xx + marginLeft;
                         curPlot.x2 = (float)ActualWidth - xx - marginRight;
                         curPlot.y1 = yy + i * plotHeight + marginTop;
                         curPlot.y2 = yy + i * plotHeight + plotHeight - marginBottom;
-
+                        
+                        // рисуем поле графика
                         RawRectangleF PlotArea = new RawRectangleF(curPlot.x1, curPlot.y1, curPlot.x2, curPlot.y2);
-                        target.DrawRectangle(PlotArea, helperBrush, 1.0f);
+                        target.FillRectangle(PlotArea, brushPlotBG);
+                        target.DrawRectangle(PlotArea, brushPlotStroke, 1f);
 
                         float tickGapX = 5f; //sec
 
                         float tickGapY = 10f; //mm
-
+                        
+                        // данные для отображения
                         RealData data;
 
                         if (IsGrabbing)
@@ -386,7 +392,6 @@ namespace DXTesting
                             autoYzoom = true;
                         }
                         else
-                        // if (IsPostProc)
                         {
                             data = con.rdata;
 
@@ -399,9 +404,9 @@ namespace DXTesting
                             var ySpacing = 20 / yScale;
 
                             tickGapY = OptimalSpacing(ySpacing);
-
                         }
 
+                        // автомасштаб
                         DoAutoScale(ref data.X, ref data.Y, ref curPlot, autoYzoom);
 
                         // Определяем насколько точек больше чем на экране
@@ -414,30 +419,36 @@ namespace DXTesting
                             step = (int)Math.Floor(N / ww);
                         }
 
+                        // начальный и конечные тики
                         float xStart = (float)Math.Ceiling(curPlot.xMin / tickGapX) * tickGapX;
                         float xEnd = (float)Math.Floor(curPlot.xMax / tickGapX) * tickGapX;
 
                         float yStart = (float)Math.Ceiling(curPlot.yMin / tickGapY) * tickGapY;
                         float yEnd = (float)Math.Floor(curPlot.yMax / tickGapY) * tickGapY;
 
+                        // формат текста
                         labelTextFormat.TextAlignment = TextAlignment.Center;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
 
                         // рисуем тики X
                         for (var k = xStart - tickGapX; k < xEnd + tickGapX; k = k + tickGapX)
                         {
-
                             RawVector2 tickPoint = PointToCanvasN(curPlot, k, 0);
                             RawVector2 point1 = new RawVector2(tickPoint.X, curPlot.y2 - 2);
                             RawVector2 point2 = new RawVector2(tickPoint.X, curPlot.y1 + 2);
-                            target.DrawLine(point1, point2, helperBrush);
-                            drawText(k.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, tickPoint.X, curPlot.y2 + 2);
+
+                            if ((tickPoint.X > curPlot.x1) & (tickPoint.X < curPlot.x2))
+                            {
+                                target.DrawLine(point1, point2, brushTickX);
+                                drawText(k.ToString("F2"), ref labelTextFormat, ref brushBlack, ref target, tickPoint.X, curPlot.y2 + 2);
+                            }
                         }
 
-                        //  рисуем тики для Y 
+                        // формат
                         labelTextFormat.TextAlignment = TextAlignment.Leading;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
+                        //  рисуем тики для Y 
                         for (var k = yStart - tickGapY; k < yEnd + tickGapY; k = k + tickGapY)
                         {
                             RawVector2 tickPoint = PointToCanvasN(curPlot, data.X[(int)N - 1], k);
@@ -446,22 +457,18 @@ namespace DXTesting
 
                             if ((tickPoint.Y > curPlot.y1) & (tickPoint.Y < curPlot.y2))
                             {
-                                target.DrawLine(point1, point2, transparentBrush);
-                                drawText(k.ToString("F2"), ref labelTextFormat, ref transparentBrush, ref target, point2.X + 3, point2.Y);
+                                target.DrawLine(point1, point2, brushTickY);
+                                drawText(k.ToString("F2"), ref labelTextFormat, ref brushTickY, ref target, point2.X + 3, point2.Y);
                             }
                         }
 
+                        //
                         labelTextFormat.TextAlignment = TextAlignment.Leading;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Center;
 
                         // рисуем значения yMax и yMin
-                        drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
-                        drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
-
-
-
-
-
+                        drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushBlack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
+                        drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushBlack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
 
                         float cursorVal = 0;
 
@@ -470,21 +477,20 @@ namespace DXTesting
                         {
                             RawVector2 stPoint = PointToCanvas(curPlot, data.X[jjj], data.Y[jjj]);
                             RawVector2 endPoint = PointToCanvas(curPlot, data.X[jjj + step], data.Y[jjj + step]);
-                            target.DrawLine(stPoint, endPoint, blueBrush);
+                            target.DrawLine(stPoint, endPoint, brushData);
 
                             // РИСУЕМ КУРСОР 
                             if (_cursor > 0 && _cursor == Math.Round(stPoint.X))
                             {
                                 RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
                                 RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
-                                target.DrawLine(stPoint2, endPoint2, brushblack);
+                                target.DrawLine(stPoint2, endPoint2, brushBlack);
                                 cursorVal = data.Y[jjj];
                             }
                         }
 
 
-                        // рисуем текущее значение
-
+                        //текущее значение
                         string curVal;
                         if (IsGrabbing)
                         {
@@ -498,15 +504,15 @@ namespace DXTesting
                         headerTextFormat.TextAlignment = TextAlignment.Trailing;
                         headerTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
 
-                        drawText(curVal, ref headerTextFormat, ref brushblack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
-
+                        // рисуем его
+                        drawText(curVal, ref headerTextFormat, ref brushBlack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
 
                         // рисуем вспомогательное 
                         labelTextFormat.TextAlignment = TextAlignment.Leading;
                         headerTextFormat.TextAlignment = TextAlignment.Leading;
                         labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-                        drawText((con.ConnID + 1).ToString(), ref headerTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 2);
-                        drawText(con.Serial, ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 12, curPlot.y1 + 4);
+                        drawText((con.ConnID + 1).ToString(), ref headerTextFormat, ref brushBlack, ref target, curPlot.x1 + 4, curPlot.y1 + 2);
+                        drawText(con.Serial, ref labelTextFormat, ref brushBlack, ref target, curPlot.x1 + 12, curPlot.y1 + 4);
 
                         i++;
                     }
