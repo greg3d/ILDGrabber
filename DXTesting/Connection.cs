@@ -11,16 +11,11 @@ using System.Windows;
 namespace DXTesting
 
 {
-
     class Connection : IDisposable
     {
         //Events and event delegates
         public delegate void StatusHandler(object sender, ConnectionEventArgs e);
-        public delegate void RedrawHandler(object sender);
-
         public event StatusHandler Notify;
-        public event RedrawHandler NeedRedraw;
-
 
         // privates
         private TcpClient client;
@@ -333,7 +328,6 @@ namespace DXTesting
 
         }
 
-
         public void StopGrab()
         {
             GrabTrigger = false;
@@ -393,11 +387,7 @@ namespace DXTesting
             FReader.Close();
             fs.Close();
 
-            //Thread.Sleep(50);
-
             IsPostProc = true;
-            NeedRedraw?.Invoke(this);
-
         }
 
         private void DemoGrabbingTask()
@@ -427,7 +417,6 @@ namespace DXTesting
 
                         ticks++;
 
-
                         float tt = (float)ticks / (float)Rate;
                         float val = (float)Math.Sin(2f * 3.14f * tt) * Range + PortNum - 4000;
 
@@ -445,11 +434,7 @@ namespace DXTesting
                     Task.Factory.StartNew(() =>
                     {
                         vdata.Push(timeValues, realValues, realSize);
-                        NeedRedraw?.Invoke(this);
                     });
-
-                    //pushing.
-
 
                     Thread.Sleep(100);
 
@@ -465,7 +450,6 @@ namespace DXTesting
 
             if (IsConnected && IsReady)
             {
-
 
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
@@ -502,7 +486,6 @@ namespace DXTesting
 
                     if (size > 0)
                     {
-
                         int realSize = (size) / 3;
 
                         float[] internalCount = new float[realSize];
@@ -511,7 +494,6 @@ namespace DXTesting
 
                         for (int j = 0; j < realValues.Length; j++)
                         {
-
                             ticks++;
 
                             byte low = data[j * 3];
@@ -548,33 +530,17 @@ namespace DXTesting
 
                             Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
                             FileWriter.Write(package);
-
                         }
 
                         Task.Factory.StartNew(() =>
                         {
                             vdata.Push(timeValues, realValues, realSize);
-                            NeedRedraw?.Invoke(this);
                         });
                     }
-
-                    //vdata.Push(timeValues, realValues, realSize);
-
-                    //Thread.Sleep(50);
-
                     IsGrabbing = true;
-
                 }
                 while (GrabTrigger); // пока данные есть в потоке
-
             }
         }
-
-
-
-
     }
-
-
-
 }

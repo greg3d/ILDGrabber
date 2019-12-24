@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 
 namespace DXTesting
 {
-    partial class GDICanvas
+    public class GDICanvas
     {
         protected int ActualWidth;
         protected int ActualHeight;
@@ -18,7 +19,7 @@ namespace DXTesting
         private Bitmap gdiBitmap;
         protected Graphics graphics;
 
-        public InteropBitmap interopBitmap { get; private set; }
+        protected InteropBitmap interopBitmap;
 
         const uint FILE_MAP_ALL_ACCESS = 0xF001F;
         const uint PAGE_READWRITE = 0x04;
@@ -52,33 +53,44 @@ namespace DXTesting
         {
             cont = c;
             img = image;
+            cont.SizeChanged += Cont_SizeChanged;
+
             createBitmaps();
+            draw();
+        }
+
+        private void Cont_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            createBitmaps();
+            draw();
         }
 
         public void createBitmaps()
         {
-
             ActualWidth = (int)cont.ActualWidth;
             ActualHeight = (int)cont.ActualHeight;
+
+            //img.Source = null;
+            interopBitmap = null;
+            gdiBitmap?.Dispose();
+            graphics?.Dispose();
+
+            Disposer.SafeDispose(ref interopBitmap);
+            Disposer.SafeDispose(ref gdiBitmap);
+            Disposer.SafeDispose(ref graphics);
 
             uint byteCount = (uint)(ActualWidth * ActualHeight * bpp);
 
             //Allocate/reserve memory to write to
-
             var sectionPointer = CreateFileMapping(new IntPtr(-1), IntPtr.Zero, PAGE_READWRITE, 0, byteCount, null);
-
             var mapPointer = MapViewOfFile(sectionPointer, FILE_MAP_ALL_ACCESS, 0, 0, byteCount);
-
             var format = PixelFormats.Bgr32;
 
             //create the InteropBitmap
-
             interopBitmap = Imaging.CreateBitmapSourceFromMemorySection(sectionPointer, ActualWidth, ActualHeight, format,
                 (ActualWidth * format.BitsPerPixel / 8), 0) as InteropBitmap;
 
-
             //create the GDI Bitmap
-
             gdiBitmap = new System.Drawing.Bitmap(
                 ActualWidth,
                 ActualHeight,
@@ -88,24 +100,22 @@ namespace DXTesting
                );
 
             // Get good old GDI Graphics
-
             graphics = Graphics.FromImage(gdiBitmap);
-
             img.Source = interopBitmap;
+
+            GC.Collect();
         }
 
         protected virtual void draw()
         {
-
             graphics.Clear(System.Drawing.Color.White);
-
             interopBitmap.Invalidate();
         }
 
         public void Redraw()
         {
-            //createBitmaps((int)cont.ActualWidth, (int)cont.ActualHeight);
             draw();
         }
+
     }
 }

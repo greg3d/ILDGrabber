@@ -95,7 +95,7 @@ namespace DXTesting
 
     public partial class MainWindow : Window
     {
-        GDICanvas gdi;
+        Canvas2DD gdi;
         private System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
         private Ellipse[] indicators;
@@ -203,12 +203,11 @@ namespace DXTesting
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             //gField.SizeChanged += GField_SizeChanged;
-            WindowState = WindowState.Maximized;
+            //WindowState = WindowState.Maximized;
             gdi = new Canvas2DD(gContainer, gField);
-            gdi.Redraw();
-            EnableScaleButtons(false);
 
-            //timer.Start();
+            progressBar2.Visibility = Visibility.Hidden;
+            EnableScaleButtons(false);
         }
 
         private void GField_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -308,16 +307,16 @@ namespace DXTesting
 
         private async void StopButton_Click(object sender, RoutedEventArgs e)
         {
+            timer.Stop();
+
             Connectionz cons = Connectionz.getInstance();
 
             GrabButton.IsEnabled = false;
             StopButton.IsEnabled = false;
 
-            //ProgBarWindow pbarw = new ProgBarWindow();
-            //pbarw.Activate();
-            //pbarw.Topmost = true;
+            progressBar2.Visibility = Visibility.Visible;
+
             var progress = new Progress<int>(s => progressBar2.Value = s);
-            //pbarw.ShowDialog();
 
             int result = await Task.Factory.StartNew<int>(() => cons.Stop(progress), TaskCreationOptions.LongRunning);
 
@@ -325,51 +324,46 @@ namespace DXTesting
             StopButton.IsEnabled = false;
 
             EnableScaleButtons(true);
+            progressBar2.Visibility = Visibility.Hidden;
 
-            //cons.Stop();
         }
 
         private void chartControl1_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            /*
-            if (canvas2d2.IsPostProc)
+            if (gdi.IsPostProc)
             {
-
                 mouseMode = 1;
-
-                canvas2d2.AutoYzoom = false;
-                startPoint = e.GetPosition(canvas2d2);
-                canvas2d2.CaptureMouse();
-                canvas2d2.Redraw();
+                gdi.AutoYzoom = false;
+                startPoint = e.GetPosition(gField);
+                gField.CaptureMouse();
+                gdi.Redraw();
             }
-            */
-
         }
 
         private void chartControl1_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            /*
-            if (canvas2d2.IsMouseCaptured)
+
+            if (gField.IsMouseCaptured)
             {
                 if (mouseMode == 1)
                 {
-                    endPoint = e.GetPosition(canvas2d2);
+                    endPoint = e.GetPosition(gField);
 
-                    var w = canvas2d2.ActualWidth;
-                    var k = (canvas2d2.xMax - canvas2d2.xMin) / w;
-                    canvas2d2.xMin = (float)(canvas2d2.xMin - k * (endPoint.X - startPoint.X));
-                    canvas2d2.xMax = (float)(canvas2d2.xMax - k * (endPoint.X - startPoint.X));
-                    canvas2d2.Redraw();
+                    var w = gField.ActualWidth;
+                    var k = (gdi.xMax - gdi.xMin) / w;
+                    gdi.xMin = (float)(gdi.xMin - k * (endPoint.X - startPoint.X));
+                    gdi.xMax = (float)(gdi.xMax - k * (endPoint.X - startPoint.X));
+                    gdi.Redraw();
 
-                    startPoint = e.GetPosition(canvas2d2);
+                    startPoint = e.GetPosition(gField);
                 }
 
                 if (mouseMode == 2)
                 {
-                    endPoint = e.GetPosition(canvas2d2);
+                    endPoint = e.GetPosition(gField);
 
 
-                    foreach (var plot in canvas2d2.plotList)
+                    foreach (var plot in gdi.plotList)
                     {
                         if (superStartPoint.Y < plot.y2 && superStartPoint.Y > plot.y1)
                         {
@@ -379,39 +373,30 @@ namespace DXTesting
                             plot.yMin = (float)(plot.yMin + k * (endPoint.Y - startPoint.Y));
                             plot.yMax = (float)(plot.yMax + k * (endPoint.Y - startPoint.Y));
 
-
-                            canvas2d2.Redraw();
+                            gdi.Redraw();
                         }
                     }
-
-
-
-                    startPoint = e.GetPosition(canvas2d2);
+                    startPoint = e.GetPosition(gField);
                 }
-
-
             }
-
             else
             {
-                if (canvas2d2.IsPostProc)
+                if (gdi.IsPostProc)
                 {
-                    endPoint = e.GetPosition(canvas2d2);
-                    canvas2d2.DrawCursor((int)endPoint.X);
-                    canvas2d2.Redraw();
+                    endPoint = e.GetPosition(gField);
+                    gdi.DrawCursor((int)endPoint.X);
+                    gdi.Redraw();
                 }
             }
-            */
         }
 
         private void chartControl1_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            /*
-            if (canvas2d2.IsMouseCaptured)
+            if (gField.IsMouseCaptured)
             {
                 mouseMode = 0;
-                canvas2d2.ReleaseMouseCapture();
-            }*/
+                gField.ReleaseMouseCapture();
+            }
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
@@ -421,85 +406,72 @@ namespace DXTesting
 
         private void chartControl1_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            //canvas2d2.DrawCursor(-1);
-            //canvas2d2.Redraw();
+            gdi.DrawCursor(-1);
+            gdi.Redraw();
         }
 
         private void buttonYPlus_Click(object sender, RoutedEventArgs e)
         {
-            //if (canvas2d2.IsPostProc)
-            // {
-            //   canvas2d2.ScaleY(1);
-            //  canvas2d2.Redraw();
-            // }
+            if (gdi.IsPostProc)
+            {
+                gdi.ScaleY(1);
+                gdi.Redraw();
+            }
         }
 
         private void buttonYMinus_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            if (canvas2d2.IsPostProc)
+            if (gdi.IsPostProc)
             {
-
-                canvas2d2.ScaleY(-1);
-                canvas2d2.Redraw();
-
-            }*/
+                gdi.ScaleY(-1);
+                gdi.Redraw();
+            }
         }
 
         private void buttonXPlus_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            if (canvas2d2.IsPostProc)
-           {
-
-               canvas2d2.ScaleX(1);
-                canvas2d2.Redraw();
+            if (gdi.IsPostProc)
+            {
+                gdi.ScaleX(1);
+                gdi.Redraw();
             }
-            */
         }
 
         private void buttonXMinus_Click(object sender, RoutedEventArgs e)
         {
-            /*
-           if (canvas2d2.IsPostProc)
-           {
-            canvas2d2.ScaleX(-1);
-                canvas2d2.Redraw();
+            if (gdi.IsPostProc)
+            {
+                gdi.ScaleX(-1);
+                gdi.Redraw();
             }
-            */
         }
 
         private void chartControl1_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            /*
-           if (canvas2d2.IsPostProc)
+            if (gdi.IsPostProc)
             {
-
                 mouseMode = 2;
+                gdi.AutoYzoom = false;
 
-                canvas2d2.AutoYzoom = false;
-
-               startPoint = e.GetPosition(canvas2d2);
-               superStartPoint = e.GetPosition(canvas2d2);
-                canvas2d2.CaptureMouse();
-           }
-           */
+                startPoint = e.GetPosition(gField);
+                superStartPoint = e.GetPosition(gField);
+                gField.CaptureMouse();
+            }
         }
 
         private void chartControl1_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            /*
-            if (canvas2d2.IsMouseCaptured)
+        {   
+            if (gField.IsMouseCaptured)
             {
                mouseMode = 0;
-               canvas2d2.ReleaseMouseCapture();
-            }*/
+               gField.ReleaseMouseCapture();
+            }
         }
 
         private void buttonAutoScale_Click(object sender, RoutedEventArgs e)
         {
-            //canvas2d2.AutoYzoom = true;
-            //canvas2d2.Redraw();
+            gdi.AutoYzoom = true;
+            gdi.Redraw();
         }
 
         private void buttonOpenSettings_Click(object sender, RoutedEventArgs e)

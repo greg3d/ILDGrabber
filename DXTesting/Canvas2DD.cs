@@ -5,7 +5,6 @@ using System.Drawing;
 
 namespace DXTesting
 {
-
     public class Plot
     {
         public float x1;
@@ -30,12 +29,14 @@ namespace DXTesting
         }
     }
 
-    class Canvas2DD : GDICanvas
+    public class Canvas2DD : GDICanvas
     {
 
         public bool DoRedraw = false;
         public bool IsPostProc = false;
         public bool IsGrabbing = false;
+
+
 
         private int oldVisibleCount = 0;
 

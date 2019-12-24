@@ -92,9 +92,8 @@ namespace DXTesting
     {
 
         public delegate void StatusHandler(object sender, ConzEventArgs e);
-        public delegate void ProgressHandler(ProgressArgs e);
+
         public event StatusHandler SendMessage;
-        public event ProgressHandler ProgressChanged;
 
         private static Connectionz instance;
 
@@ -185,13 +184,13 @@ namespace DXTesting
         {
             PrepareReadyList();
             progress.Report(0);
-            
+
             Task[] tasks = new Task[ReadyCount];
             foreach (var ch in ReadyList.Select((x, i) => new { Value = x, Index = i }))
             {
                 tasks[ch.Index] = cons[ch.Value].grabbing;
             }
-            
+
 
             for (int i = 0; i < Count; i++)
             {
@@ -294,7 +293,7 @@ namespace DXTesting
 
             foreach (var i in ReadyList)
             {
-                
+
                 cons[i].PrepareForView();
                 curProgress = curProgress + i * (60 / ReadyCount);
                 progress.Report(curProgress);
