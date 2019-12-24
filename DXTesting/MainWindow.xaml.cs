@@ -1,11 +1,10 @@
 ﻿//using DXTesting.ViewModels;
 using System;
-using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace DXTesting
@@ -13,7 +12,7 @@ namespace DXTesting
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-
+    #region RelayCommand Defenition
 
     public class RelayCommand : ICommand
     {
@@ -56,6 +55,8 @@ namespace DXTesting
             _execteMethod(parameter);
         }
     }
+    #endregion
+
 
     public class EnumBooleanConverter : IValueConverter
     {
@@ -91,9 +92,11 @@ namespace DXTesting
         #endregion
     }
 
+
     public partial class MainWindow : Window
     {
-
+        GDICanvas gdi;
+        private System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
         private Ellipse[] indicators;
 
@@ -102,7 +105,7 @@ namespace DXTesting
         private Point endPoint = new Point();
 
         int mouseMode = 0;
-        
+
         public MainWindow()
         {
             this.Resources["enumToBoolConverter"] = new EnumBooleanConverter();
@@ -110,9 +113,10 @@ namespace DXTesting
             InitializeComponent();
             this.DataContext = new MainWindowViewModel();
 
-            //Connectionz cons = Connectionz.getInstance(1);
 
-            //Instance = this;
+            Loaded += MainWindow_Loaded;
+            timer.Tick += DoRedrawHandler;
+            //timer.Interval = 20;
 
             GrabButton.IsEnabled = false;
             StopButton.IsEnabled = false;
@@ -125,11 +129,6 @@ namespace DXTesting
             for (int i = 0; i < cons.cons.Length; i++)
             {
                 cons.cons[i].Notify += SetConnIndicator;
-            }
-
-            for (int i = 0; i < cons.cons.Length; i++)
-            {
-                cons.cons[i].NeedRedraw += DoRedrawHandler;
             }
 
             indicators = new Ellipse[8];
@@ -192,10 +191,34 @@ namespace DXTesting
             checkBox8.SetBinding(CheckBox.IsCheckedProperty, bind);
         }
 
-        private void DoRedrawHandler(object sender)
+        private void EnableScaleButtons(bool status)
         {
-            canvas2d2.Redraw();
-            
+            buttonAutoScale.IsEnabled = status;
+            buttonXMinus.IsEnabled = status;
+            buttonYMinus.IsEnabled = status;
+            buttonXPlus.IsEnabled = status;
+            buttonYPlus.IsEnabled = status;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            //gField.SizeChanged += GField_SizeChanged;
+            WindowState = WindowState.Maximized;
+            gdi = new Canvas2DD(gContainer, gField);
+            gdi.Redraw();
+            EnableScaleButtons(false);
+
+            //timer.Start();
+        }
+
+        private void GField_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            //gdi.createBitmaps();
+        }
+
+        private void DoRedrawHandler(object sender, EventArgs e)
+        {
+            gdi.Redraw();
         }
 
         private void ButtonsDisabling(object sender, ConzEventArgs e)
@@ -270,35 +293,45 @@ namespace DXTesting
             cons.ConnectAll();
 
             checkBoxDemo.IsEnabled = false;
-
-
         }
 
         private void GrabButton_Click(object sender, RoutedEventArgs e)
         {
-            Connectionz cons = Connectionz.getInstance();
-            cons.Grab();
+            EnableScaleButtons(false);
             GrabButton.IsEnabled = false;
             StopButton.IsEnabled = true;
+
+            timer.Start();
+            Connectionz cons = Connectionz.getInstance();
+            cons.Grab();
         }
 
-        private void StopButton_Click(object sender, RoutedEventArgs e)
+        private async void StopButton_Click(object sender, RoutedEventArgs e)
         {
             Connectionz cons = Connectionz.getInstance();
-            cons.Stop();
+
+            GrabButton.IsEnabled = false;
+            StopButton.IsEnabled = false;
+
+            //ProgBarWindow pbarw = new ProgBarWindow();
+            //pbarw.Activate();
+            //pbarw.Topmost = true;
+            var progress = new Progress<int>(s => progressBar2.Value = s);
+            //pbarw.ShowDialog();
+
+            int result = await Task.Factory.StartNew<int>(() => cons.Stop(progress), TaskCreationOptions.LongRunning);
+
             GrabButton.IsEnabled = true;
             StopButton.IsEnabled = false;
 
-            ProgBarWindow pbarw = new ProgBarWindow();
-            pbarw.Activate();
-            pbarw.Topmost = true;
+            EnableScaleButtons(true);
 
-            pbarw.ShowDialog();
-
+            //cons.Stop();
         }
 
         private void chartControl1_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            /*
             if (canvas2d2.IsPostProc)
             {
 
@@ -309,12 +342,13 @@ namespace DXTesting
                 canvas2d2.CaptureMouse();
                 canvas2d2.Redraw();
             }
+            */
 
         }
 
         private void chartControl1_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            
+            /*
             if (canvas2d2.IsMouseCaptured)
             {
                 if (mouseMode == 1)
@@ -367,16 +401,17 @@ namespace DXTesting
                     canvas2d2.Redraw();
                 }
             }
+            */
         }
 
         private void chartControl1_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-
+            /*
             if (canvas2d2.IsMouseCaptured)
             {
                 mouseMode = 0;
                 canvas2d2.ReleaseMouseCapture();
-            }
+            }*/
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
@@ -386,51 +421,57 @@ namespace DXTesting
 
         private void chartControl1_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
-           canvas2d2.DrawCursor(-1);
-            canvas2d2.Redraw();
+            //canvas2d2.DrawCursor(-1);
+            //canvas2d2.Redraw();
         }
 
         private void buttonYPlus_Click(object sender, RoutedEventArgs e)
         {
-            if (canvas2d2.IsPostProc)
-            {
-               canvas2d2.ScaleY(1);
-               canvas2d2.Redraw();
-            }
+            //if (canvas2d2.IsPostProc)
+            // {
+            //   canvas2d2.ScaleY(1);
+            //  canvas2d2.Redraw();
+            // }
         }
 
         private void buttonYMinus_Click(object sender, RoutedEventArgs e)
         {
+            /*
             if (canvas2d2.IsPostProc)
             {
 
                 canvas2d2.ScaleY(-1);
                 canvas2d2.Redraw();
 
-            }
+            }*/
         }
 
         private void buttonXPlus_Click(object sender, RoutedEventArgs e)
         {
+            /*
             if (canvas2d2.IsPostProc)
            {
 
                canvas2d2.ScaleX(1);
                 canvas2d2.Redraw();
             }
+            */
         }
 
         private void buttonXMinus_Click(object sender, RoutedEventArgs e)
         {
+            /*
            if (canvas2d2.IsPostProc)
            {
             canvas2d2.ScaleX(-1);
                 canvas2d2.Redraw();
             }
+            */
         }
 
         private void chartControl1_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            /*
            if (canvas2d2.IsPostProc)
             {
 
@@ -442,21 +483,23 @@ namespace DXTesting
                superStartPoint = e.GetPosition(canvas2d2);
                 canvas2d2.CaptureMouse();
            }
+           */
         }
 
         private void chartControl1_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
+            /*
             if (canvas2d2.IsMouseCaptured)
             {
                mouseMode = 0;
                canvas2d2.ReleaseMouseCapture();
-            }
+            }*/
         }
 
         private void buttonAutoScale_Click(object sender, RoutedEventArgs e)
         {
-            canvas2d2.AutoYzoom = true;
-            canvas2d2.Redraw();
+            //canvas2d2.AutoYzoom = true;
+            //canvas2d2.Redraw();
         }
 
         private void buttonOpenSettings_Click(object sender, RoutedEventArgs e)

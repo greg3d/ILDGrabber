@@ -181,125 +181,128 @@ namespace DXTesting
             }
         }
 
-        public void Stop()
+        public int Stop(IProgress<int> progress)
         {
-            ProgressChanged?.Invoke(new ProgressArgs(0));
-            Task.Factory.StartNew(() =>
+            PrepareReadyList();
+            progress.Report(0);
+            
+            Task[] tasks = new Task[ReadyCount];
+            foreach (var ch in ReadyList.Select((x, i) => new { Value = x, Index = i }))
             {
+                tasks[ch.Index] = cons[ch.Value].grabbing;
+            }
+            
 
+            for (int i = 0; i < Count; i++)
+            {
+                cons[i].StopGrab();
+            }
+
+            Task.WaitAll(tasks);
+
+            progress.Report(5);
+
+            float[] startTimes = new float[ReadyCount];
+            int[] startCounts = new int[ReadyCount];
+            int[] endCounts = new int[ReadyCount];
+            int[] lens = new int[ReadyCount];
+
+            foreach (var ch in ReadyList.Select((x, i) => new { Value = x, Index = i }))
+            {
+                var fname = cons[ch.Value].filename;
+                var fs = new FileStream(fname, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var fReader = new BinaryReader(fs);
+                lens[ch.Index] = (int)fs.Length / 12;
+
+                startTimes[ch.Index] = fReader.ReadSingle();
+                var s1 = fReader.ReadSingle();
+                var s2 = fReader.ReadSingle();
+
+                fReader.Close();
+                fs.Close();
+            }
+
+            progress.Report(10);
+
+            float max = startTimes.Max();
+
+            for (int i = 0; i < startTimes.Length; i++)
+            {
+                startTimes[i] = Math.Abs(max - startTimes[i]);
+
+                int fs = (int)Settings.getInstance().Fs;
+                double k = (1000d / fs);
+                startCounts[i] = (int)Math.Floor(startTimes[i] / k);
+            }
+
+            progress.Report(20);
+
+            var min = lens[0] - startCounts[0];
+
+            for (int i = 1; i < startTimes.Length; i++)
+            {
+                if (lens[i] - startCounts[i] < min)
+                {
+                    min = lens[i] - startCounts[i];
+                }
+            }
+
+            progress.Report(30);
+
+            foreach (var ch in ReadyList.Select((x, i) => new { Value = x, Index = i }))
+            {
+                var fname = cons[ch.Value].filename;
+                var fs = new FileStream(fname, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var fReader = new BinaryReader(fs);
+                var n = (int)fs.Length / 12;
+
+                var someData = new RealData(n, false);
+
+                var j = 0;
+
+                while (fs.Position != fs.Length)
+                {
+                    var jjj = fReader.ReadSingle();
+                    someData.X[j] = fReader.ReadSingle();
+                    someData.Y[j] = fReader.ReadSingle();
+
+                    j++;
+                }
+
+                fReader.Close();
+                fs.Close();
+
+                fs = new FileStream(fname, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+                var bw = new BinaryWriter(fs);
+                float newEx = 0;
+
+                for (int k = startCounts[ch.Index]; k < startCounts[ch.Index] + min; k++)
+                {
+                    var package = new byte[4 * 2];
+                    newEx++;
+                    Buffer.BlockCopy(new float[] { newEx / (float)cons[0].Rate, someData.Y[k] }, 0, package, 0, 8);
+                    bw.Write(package);
+                }
+
+                bw.Close();
+                fs.Close();
+            }
+
+            progress.Report(40);
+
+            int curProgress = 40;
+
+            foreach (var i in ReadyList)
+            {
                 
-                SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
+                cons[i].PrepareForView();
+                curProgress = curProgress + i * (60 / ReadyCount);
+                progress.Report(curProgress);
+            }
 
+            progress.Report(100);
 
-                PrepareReadyList();
-
-                for (int i = 0; i < Count; i++)
-                {
-                    cons[i].StopGrab();
-                }
-                ProgressChanged?.Invoke(new ProgressArgs(5));
-                Thread.Sleep(100);
-                ProgressChanged?.Invoke(new ProgressArgs(15));
-
-                float[] startTimes = new float[ReadyCount];
-                int[] startCounts = new int[ReadyCount];
-                int[] endCounts = new int[ReadyCount];
-                int[] lens = new int[ReadyCount];
-
-                foreach (var ch in ReadyList.Select((x, i) => new { Value = x, Index = i }))
-                {
-                    var fname = cons[ch.Value].filename;
-                    var fs = new FileStream(fname, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    var fReader = new BinaryReader(fs);
-                    lens[ch.Index] = (int)fs.Length / 12;
-
-                    startTimes[ch.Index] = fReader.ReadSingle();
-                    var s1 = fReader.ReadSingle();
-                    var s2 = fReader.ReadSingle();
-
-                    fReader.Close();
-                    fs.Close();
-                }
-
-                ProgressChanged?.Invoke(new ProgressArgs(25));
-
-                float max = startTimes.Max();
-
-                for (int i = 0; i < startTimes.Length; i++)
-                {
-                    startTimes[i] = Math.Abs(max - startTimes[i]);
-
-                    int fs = (int)Settings.getInstance().Fs;
-                    double k = (1000d / fs);
-                    startCounts[i] = (int)Math.Floor(startTimes[i] / k);
-                }
-
-                ProgressChanged?.Invoke(new ProgressArgs(30));
-
-                var min = lens[0] - startCounts[0];
-
-                for (int i = 1; i < startTimes.Length; i++)
-                {
-                    if (lens[i] - startCounts[i] < min)
-                    {
-                        min = lens[i] - startCounts[i];
-                    }
-                }
-
-                ProgressChanged?.Invoke(new ProgressArgs(35));
-
-                foreach (var ch in ReadyList.Select((x, i) => new { Value = x, Index = i }))
-                {
-                    var fname = cons[ch.Value].filename;
-                    var fs = new FileStream(fname, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    var fReader = new BinaryReader(fs);
-                    var n = (int)fs.Length / 12;
-
-                    var someData = new RealData(n, false);
-
-                    var j = 0;
-
-                    while (fs.Position != fs.Length)
-                    {
-                        var jjj = fReader.ReadSingle();
-                        someData.X[j] = fReader.ReadSingle();
-                        someData.Y[j] = fReader.ReadSingle();
-
-                        j++;
-                    }
-
-                    fReader.Close();
-                    fs.Close();
-
-
-                    fs = new FileStream(fname, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-                    var bw = new BinaryWriter(fs);
-                    float newEx = 0;
-
-                    for (int k = startCounts[ch.Index]; k < startCounts[ch.Index] + min; k++)
-                    {
-                        var package = new byte[4 * 2];
-                        newEx++;
-                        Buffer.BlockCopy(new float[] { newEx / (float)cons[0].Rate, someData.Y[k] }, 0, package, 0, 8);
-                        bw.Write(package);
-                    }
-
-                    bw.Close();
-                    fs.Close();
-                }
-
-                ProgressChanged?.Invoke(new ProgressArgs(50));
-
-
-                foreach (var i in ReadyList)
-                {
-
-                    cons[i].PrepareForView();
-                }
-
-                ProgressChanged?.Invoke(new ProgressArgs(100));
-
-            });
+            return (int)100;
 
         }
 
@@ -408,7 +411,7 @@ namespace DXTesting
                 }
                 MessageBox.Show("Сохранено в " + saveDialog.FileName);
             }
-            
+
 
 
         }
@@ -420,7 +423,7 @@ namespace DXTesting
             {
                 ConnectAllTask();
             });*/
-            
+
 
             Thread conThread = new Thread(new ThreadStart(ConnectAllTask));
             conThread.Name = "Connections thread";

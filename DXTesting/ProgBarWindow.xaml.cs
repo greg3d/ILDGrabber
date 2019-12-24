@@ -10,25 +10,15 @@ namespace DXTesting
         public ProgBarWindow()
         {
             InitializeComponent();
-
-            Connectionz cons = Connectionz.getInstance();
-            cons.ProgressChanged += ProgressChangedHandler;
+            progbar1.ValueChanged += Progbar1_ValueChanged;
         }
 
-        private void ProgressChangedHandler(ProgressArgs e)
+        private void Progbar1_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            int stat = e.Status;
-            this.Dispatcher.Invoke(() =>
+            if (e.NewValue == 100)
             {
-                progbar1.Value = stat;
-
-                if (stat == 100)
-                {
-                    Close();
-                }
-            });
-
-            
+                Close();
+            }
         }
     }
 }

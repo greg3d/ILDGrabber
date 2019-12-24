@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Threading;
-using System.Windows.Controls;
-using System.Windows.Media;
+//using System.Windows;
+//using System.Windows.Media;
 using System.Drawing;
-using System.Windows.Media.Imaging;
 
 namespace DXTesting
 {
@@ -37,13 +30,8 @@ namespace DXTesting
         }
     }
 
-    public class Canvas2DD : Canvas
+    class Canvas2DD : GDICanvas
     {
-        public const int NROWS = 20;
-        public const int NCOLS = 5;
-       
-        //private readonly Stopwatch renderTimer = new Stopwatch();
-        //private Queue<int> frameCountHist = new Queue<int>();
 
         public bool DoRedraw = false;
         public bool IsPostProc = false;
@@ -53,10 +41,8 @@ namespace DXTesting
 
         private int _cursor = -1;
 
-        //private Thread thread;
-
-        float xx = 0.5f;
-        float yy = 0.5f;
+        float xx = 0.0f;
+        float yy = 0.0f;
 
         float marginLeft = 15;
         float marginBottom = 12;
@@ -72,17 +58,7 @@ namespace DXTesting
 
         public Plot[] plotList;
 
-        // float nPoints = 5000;
-
         bool autoYzoom = true;
-
-        private SolidColorBrush bgMain;
-        private SolidColorBrush bgPlot;
-        private SolidColorBrush strokePlot;
-        private SolidColorBrush strokeData;
-        private SolidColorBrush strokeTick;
-
-        //public Dictionary<string, SolidColorBrush> canvasBrushes;
 
         public bool AutoYzoom
         {
@@ -102,46 +78,7 @@ namespace DXTesting
             {
                 _cursor = x;
             }
-
         }
-
-        public Canvas2DD()
-        {
-      
-
-            bgMain = new SolidColorBrush(new Color
-            {
-                R = 255,
-                G = 255,
-                B = 255,
-                A = 255
-            });
-
-            bgPlot = new SolidColorBrush(new Color
-            {
-                R = 220,
-                G = 220,
-                B = 220,
-                A = 255
-            });
-            
-            strokePlot = new SolidColorBrush(new Color
-            {
-                R = 180,
-                G = 180,
-                B = 180,
-                A = 255
-            });
-
-            strokeTick = new SolidColorBrush(new Color
-            {
-                R = 130,
-                G = 130,
-                B = 130,
-                A = 255
-            });
-        }
-        
 
         private Point Normalize(Plot curPlot, double x, double y)
         {
@@ -154,8 +91,8 @@ namespace DXTesting
                 y = Double.NaN;
             }
 
-            retVec.X = curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin);
-            retVec.Y = curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin);
+            retVec.X = (int)(curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin));
+            retVec.Y = (int)(curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin));
             return retVec;
         }
 
@@ -163,8 +100,8 @@ namespace DXTesting
         {
             Point retVec = new Point
             {
-                X = curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin),
-                Y = curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin)
+                X = (int)(curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin)),
+                Y = (int)(curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin))
             };
             return retVec;
         }
@@ -283,22 +220,21 @@ namespace DXTesting
 
         }
 
-        public void Redraw()
+        public Canvas2DD(System.Windows.Controls.Panel c, System.Windows.Controls.Image image) : base(c, image)
         {
-            this.Dispatcher.Invoke(() =>
-            {
-                DoRedraw = true;
-                InvalidateVisual();
-            }, DispatcherPriority.Render); //, DispatcherPriority.Render
+
         }
 
-        protected override void OnRender(DrawingContext dc)
+        protected override void draw()
         {
+            var bgcol = Color.FromArgb(255, 0xEE, 0xEE, 0xF2);
+
+            graphics.Clear(bgcol);
             Connectionz conz = Connectionz.getInstance();
 
             if (conz.ReadyCount > 0 && ActualWidth > 0)
             {
-                
+
                 IsGrabbing = true;
                 IsPostProc = true;
 
@@ -324,7 +260,7 @@ namespace DXTesting
                     oldVisibleCount = visibleCount;
                 }
 
-                plotHeight = (float)Math.Round(ActualHeight / visibleCount);
+                plotHeight = (float)Math.Round((float)ActualHeight / visibleCount);
 
                 int i = 0;
                 foreach (var con in conz.cons)
@@ -340,9 +276,18 @@ namespace DXTesting
                         curPlot.y2 = yy + i * plotHeight + plotHeight - marginBottom;
 
 
-                        //MessageBox.Show(ActualWidth.ToString());
-
-                        dc.DrawRectangle(bgPlot, new Pen(strokePlot, 1), new Rect(curPlot.x1, curPlot.y1, curPlot.x2 - curPlot.x1, curPlot.y2 - curPlot.y1));
+                        graphics.DrawRectangle(
+                            Pens.Gray,
+                            curPlot.x1,
+                            curPlot.y1,
+                            curPlot.x2 - curPlot.x1,
+                            curPlot.y2 - curPlot.y1);
+                        graphics.FillRectangle(
+                            Brushes.White,
+                            curPlot.x1,
+                            curPlot.y1,
+                            curPlot.x2 - curPlot.x1,
+                            curPlot.y2 - curPlot.y1);
 
                         float tickGapX = 5f; //sec
                         float tickGapY = 10f; //mm
@@ -389,18 +334,19 @@ namespace DXTesting
 
                         // рисуем тики X
                         for (var k = xStart - tickGapX; k < xEnd + tickGapX; k = k + tickGapX)
-                        { 
+                        {
                             Point st = NormalizeN(curPlot, k, 0);
-                            Point p1 = new Point(st.X, curPlot.y2 - 2);
-                            Point p2 = new Point(st.X, curPlot.y1 + 2);
-                            
+                            Point p1 = new Point(st.X, (int)curPlot.y2 - 2);
+                            Point p2 = new Point(st.X, (int)curPlot.y1 + 2);
+
                             if ((st.X > curPlot.x1) & (st.X < curPlot.x2))
                             {
-                                dc.DrawLine(new Pen(bgMain, 1), p1, p2);
-                                
-                                var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
-                                ttext.TextAlignment = TextAlignment.Center;
-                                dc.DrawText(ttext, new Point(st.X, curPlot.y2 + 2));
+                                graphics.DrawLine(Pens.LightGray, p1, p2);
+
+
+                                //var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
+                                //ttext.TextAlignment = TextAlignment.Center;
+                                //dc.DrawText(ttext, new Point(st.X, curPlot.y2 + 2));
                             }
                         }
 
@@ -409,50 +355,52 @@ namespace DXTesting
                         for (var k = yStart - tickGapY; k < yEnd + tickGapY; k = k + tickGapY)
                         {
                             Point st = NormalizeN(curPlot, data.X[(int)N - 1], k);
-                            Point p1 = new Point(curPlot.x1 + 1, st.Y);
-                            Point p2 = new Point(curPlot.x2 - 1, st.Y);
+                            Point p1 = new Point((int)curPlot.x1 + 1, st.Y);
+                            Point p2 = new Point((int)curPlot.x2 - 1, st.Y);
 
                             if ((st.Y > curPlot.y1) & (st.Y < curPlot.y2))
                             {
-                                var pen = new Pen(bgMain, 1);
-                                pen.DashStyle = DashStyles.Dot;
+                                //var pen = new Pen(bgMain, 1);
+                                //pen.DashStyle = DashStyles.Dot;
 
-                                dc.DrawLine(pen, p1, p2);
+                                //dc.DrawLine(pen, p1, p2);
+                                graphics.DrawLine(Pens.LightGray, p1, p2);
 
-                                var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
-                                ttext.TextAlignment = TextAlignment.Left;
-                                dc.DrawText(ttext, new Point(p2.X + 3, p2.Y ));
+                                //var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
+                                //ttext.TextAlignment = TextAlignment.Left;
+                                //dc.DrawText(ttext, new Point(p2.X + 3, p2.Y ));
                             }
                         }
 
                         // рисуем значения yMax и yMin
-                        // drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
-                        // drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
+                        //// drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
+                        //// drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
 
                         float cursorVal = 0;
-                        
-                       
+
+
                         // Рисуем сам график
-                        for (int jjj = 0; jjj < N-step; jjj = jjj + step)
+                        for (int jjj = 0; jjj < N - step; jjj = jjj + step)
                         {
 
                             Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj]);
-                            Point pt2 = NormalizeN(curPlot, data.X[jjj+step], data.Y[jjj+step]);
+                            Point pt2 = NormalizeN(curPlot, data.X[jjj + step], data.Y[jjj + step]);
 
-                            dc.DrawLine(new Pen(strokeData, 1), pt, pt2);
+                            graphics.DrawLine(Pens.Blue, pt, pt2);
+
 
                             // РИСУЕМ КУРСОР 
-                            if (_cursor > 0 && _cursor == Math.Round(pt.X))
+                            if (_cursor > 0 && _cursor == Math.Round((double)pt.X))
                             {
-                                Point p1 = new Point(_cursor, curPlot.y1 + 1);
-                                Point p2 = new Point(_cursor, curPlot.y2 - 1);
+                                Point p1 = new Point(_cursor, (int)curPlot.y1 + 1);
+                                Point p2 = new Point(_cursor, (int)curPlot.y2 - 1);
 
                                 //canvas.Children.Add(line);
                                 //     RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
                                 //     RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
                                 //      target.DrawLine(stPoint2, endPoint2, brushblack);
 
-                                dc.DrawLine(new Pen(Brushes.Black, 1), p1, p2);
+                                graphics.DrawLine(Pens.Black, p1, p2);
 
                                 cursorVal = data.Y[jjj];
                             }
@@ -471,11 +419,11 @@ namespace DXTesting
                         }
 
                         // drawText(curVal, ref headerTextFormat, ref brushblack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
-                        var text = new FormattedText(curVal, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 12, Brushes.Black);
-                        text.TextAlignment = TextAlignment.Right;
-                        text.SetFontWeight(FontWeights.Bold);
+                        //var text = new FormattedText(curVal, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 12, Brushes.Black);
+                        //text.TextAlignment = TextAlignment.Right;
+                        //text.SetFontWeight(FontWeights.Bold);
 
-                        dc.DrawText(text, new Point(curPlot.x2 - 4, curPlot.y1 + 2));
+                        //dc.DrawText(text, new Point(curPlot.x2 - 4, curPlot.y1 + 2));
 
                         // рисуем вспомогательное 
                         // labelTextFormat.TextAlignment = TextAlignment.Leading;
@@ -494,8 +442,9 @@ namespace DXTesting
                     autoYzoom = false;
                 }
 
-                
+
                 DoRedraw = false;
+                interopBitmap.Invalidate();
             }
 
 

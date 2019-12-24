@@ -11,7 +11,7 @@ using System.Windows;
 namespace DXTesting
 
 {
-  
+
     class Connection : IDisposable
     {
         //Events and event delegates
@@ -73,7 +73,7 @@ namespace DXTesting
 
         public Connection(int id)
         {
-            
+
             //indicator = indi;
 
             ConnID = id;
@@ -143,7 +143,7 @@ namespace DXTesting
                                 {
                                     IsConnected = true;
                                     localMode = 1;
-                                } 
+                                }
                                 else
                                 {
                                     Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
@@ -338,13 +338,9 @@ namespace DXTesting
         {
             GrabTrigger = false;
 
-
-
-
             if (IsGrabbing)
             {
-
-                grabbing?.Wait(1000);
+                grabbing.Wait();
 
                 if (demoMode)
                 {
@@ -526,10 +522,10 @@ namespace DXTesting
                             val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
 
                             var err = high & 0b0111_0000;
-                            
+
                             if (err > 0)
                             {
-                                if ( preval < Range/2f)
+                                if (preval < Range / 2f)
                                 {
                                     val = -1;
                                 }
@@ -575,7 +571,7 @@ namespace DXTesting
         }
 
 
-      
+
 
     }
 

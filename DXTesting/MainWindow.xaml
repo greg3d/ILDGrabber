@@ -12,7 +12,7 @@
         Width="880" 
         Height="541"
         >
-    
+
     <Grid Background="#FFEEEEF2">
         <Grid.RowDefinitions>
             <RowDefinition Height="48"/>
@@ -122,17 +122,18 @@
         <Label x:Name="label4" Content="ILD TCP Grabber" Margin="10,10,37,10" FontSize="18" FontFamily="Segoe UI Semibold" Grid.ColumnSpan="2" Padding="0" VerticalContentAlignment="Center"/>
         <Button x:Name="buttonOpenSettings" Content="Настройки" Grid.Column="2" HorizontalAlignment="Left" Margin="11,10,0,9" Width="86" Style="{DynamicResource RoundedButton}" Click="buttonOpenSettings_Click"/>
         <Button x:Name="buttonOpenService" Content="Сервисное меню" Grid.Column="2" HorizontalAlignment="Left" Margin="111,10,0,9" Width="126" Style="{DynamicResource RoundedButton}" Click="buttonOpenService_Click"/>
-        
-        <local:Canvas2DD x:Name="canvas2d2" Width="auto" Height="auto"
+        <Canvas x:Name="gContainer" Grid.Column="2" Grid.Row="1" Grid.RowSpan="3" Margin="0,0,8,10" Width="auto" Height="auto" >
+            <Image x:Name="gField" Width="auto" Height="auto" Stretch="Fill"/>
+        </Canvas>
+        <ProgressBar x:Name="progressBar2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="20" Margin="10,0,0,132" Grid.Row="3" VerticalAlignment="Bottom" Width="199"/>
+
+        <!--local:Canvas2DD x:Name="canvas2d2" Width="auto" Height="auto"
                 MouseLeftButtonDown="chartControl1_MouseLeftButtonDown"
                 MouseRightButtonDown="chartControl1_MouseRightButtonDown"
                 MouseLeftButtonUp="chartControl1_MouseLeftButtonUp"
                 MouseRightButtonUp="chartControl1_MouseRightButtonUp"
                 MouseMove="chartControl1_MouseMove"
                 MouseLeave="chartControl1_MouseLeave"
-                Grid.Column="2" Grid.Row="1" Grid.RowSpan="3" Margin="0,0,8,10" />
-    
-
-
+                Grid.Column="2" Grid.Row="1" Grid.RowSpan="3" Margin="0,0,8,10" /-->
     </Grid>
 </Window> 
