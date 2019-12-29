@@ -85,7 +85,6 @@ namespace DXTesting
         {
             Point retVec = new Point();
 
-
             if (x < curPlot.xMin || x > curPlot.xMax || y < curPlot.yMin || y > curPlot.yMax)
             {
                 x = Double.NaN;
@@ -383,28 +382,35 @@ namespace DXTesting
                         // Рисуем сам график
                         for (int jjj = 0; jjj < N - step; jjj = jjj + step)
                         {
+                            var a = data.Y[jjj];
+                            var b = data.Y[jjj + step];
 
-                            Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj]);
-                            Point pt2 = NormalizeN(curPlot, data.X[jjj + step], data.Y[jjj + step]);
-
-                            graphics.DrawLine(Pens.Blue, pt, pt2);
-
-
-                            // РИСУЕМ КУРСОР 
-                            if (_cursor > 0 && _cursor == Math.Round((double)pt.X))
+                            if (a < curPlot.yMax && a > curPlot.yMin && b < curPlot.yMax && b > curPlot.yMin)
                             {
-                                Point p1 = new Point(_cursor, (int)curPlot.y1 + 1);
-                                Point p2 = new Point(_cursor, (int)curPlot.y2 - 1);
+                                Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj]);
+                                Point pt2 = NormalizeN(curPlot, data.X[jjj + step], data.Y[jjj + step]);
 
-                                //canvas.Children.Add(line);
-                                //     RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
-                                //     RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
-                                //      target.DrawLine(stPoint2, endPoint2, brushblack);
+                                graphics.DrawLine(Pens.Blue, pt, pt2);
 
-                                graphics.DrawLine(Pens.Black, p1, p2);
 
-                                cursorVal = data.Y[jjj];
+                                // РИСУЕМ КУРСОР 
+                                if (IsPostProc && _cursor > 0 && _cursor == Math.Round((double)pt.X))
+                                {
+                                    Point p1 = new Point(_cursor, (int)curPlot.y1 + 1);
+                                    Point p2 = new Point(_cursor, (int)curPlot.y2 - 1);
+
+                                    // canvas.Children.Add(line);
+                                    // RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
+                                    // RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
+                                    // target.DrawLine(stPoint2, endPoint2, brushblack);
+
+                                    graphics.DrawLine(Pens.Black, p1, p2);
+
+                                    cursorVal = data.Y[jjj];
+                                }
                             }
+
+                            
                         }
 
                         // рисуем текущее значение
@@ -445,7 +451,6 @@ namespace DXTesting
 
 
                 DoRedraw = false;
-                interopBitmap.Invalidate();
             }
 
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -15,6 +16,7 @@ namespace DXTesting
         protected int ActualHeight;
         private Panel cont;
         private System.Windows.Controls.Image img;
+        private bool isRendering = false;
 
         private Bitmap gdiBitmap;
         protected Graphics graphics;
@@ -62,7 +64,7 @@ namespace DXTesting
         private void Cont_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             createBitmaps();
-            draw();
+            Redraw();
         }
 
         public void createBitmaps()
@@ -109,12 +111,19 @@ namespace DXTesting
         protected virtual void draw()
         {
             graphics.Clear(System.Drawing.Color.White);
-            interopBitmap.Invalidate();
         }
 
         public void Redraw()
         {
-            draw();
+            if (!isRendering)
+            {
+                isRendering = true;
+                Thread.Sleep(10);
+                draw();
+                interopBitmap.Invalidate();
+            }
+
+            isRendering = false;
         }
 
     }

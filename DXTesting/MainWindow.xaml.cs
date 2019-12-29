@@ -205,7 +205,6 @@ namespace DXTesting
             //gField.SizeChanged += GField_SizeChanged;
             //WindowState = WindowState.Maximized;
             gdi = new Canvas2DD(gContainer, gField);
-
             progressBar2.Visibility = Visibility.Hidden;
             EnableScaleButtons(false);
         }
