@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Windows;
 using System.Windows.Input;
 
 namespace DXTesting
@@ -9,8 +10,24 @@ namespace DXTesting
     {
         private bool _demo;
         private SaveFormat _currentFormat;
+        private Visibility _progBarVisibility = Visibility.Hidden;
 
         private Settings settings = Settings.getInstance();
+
+       
+        public Visibility ProgBarVisibility
+        {
+            get
+            {
+                return _progBarVisibility;
+            }
+            set
+            {
+                _progBarVisibility = value;
+                OnPropertyChanged("ProgBarVisibility");
+            }
+        }
+
 
         public bool Demo
         {

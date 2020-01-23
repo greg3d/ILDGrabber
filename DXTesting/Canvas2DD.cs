@@ -36,7 +36,9 @@ namespace DXTesting
         public bool IsPostProc = false;
         public bool IsGrabbing = false;
 
-
+        private Font smallFont = new Font("Arial", 8f);
+        private Font normalFont = new Font("Arial", 10f);
+        private Font bigFont = new Font("Arial", 12f);
 
         private int oldVisibleCount = 0;
 
@@ -332,7 +334,12 @@ namespace DXTesting
                         float yStart = (float)Math.Ceiling(curPlot.yMin / tickGapY) * tickGapY;
                         float yEnd = (float)Math.Floor(curPlot.yMax / tickGapY) * tickGapY;
 
+                        var sf = new StringFormat();
+
                         // рисуем тики X
+                        sf.Alignment = StringAlignment.Center;
+                        sf.LineAlignment = StringAlignment.Near;
+
                         for (var k = xStart - tickGapX; k < xEnd + tickGapX; k = k + tickGapX)
                         {
                             Point st = NormalizeN(curPlot, k, 0);
@@ -342,15 +349,13 @@ namespace DXTesting
                             if ((st.X > curPlot.x1) & (st.X < curPlot.x2))
                             {
                                 graphics.DrawLine(Pens.LightGray, p1, p2);
-
-
-                                //var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
-                                //ttext.TextAlignment = TextAlignment.Center;
-                                //dc.DrawText(ttext, new Point(st.X, curPlot.y2 + 2));
+                                graphics.DrawString(k.ToString("F1"), smallFont, Brushes.Black, st.X, curPlot.y2 + 2, sf);
                             }
                         }
 
-                        // рисуем тики для Y 
+                        // рисуем тики для Y
+                        sf.Alignment = StringAlignment.Near;
+                        sf.LineAlignment = StringAlignment.Center;
 
                         for (var k = yStart - tickGapY; k < yEnd + tickGapY; k = k + tickGapY)
                         {
@@ -360,21 +365,14 @@ namespace DXTesting
 
                             if ((st.Y > curPlot.y1) & (st.Y < curPlot.y2))
                             {
-                                //var pen = new Pen(bgMain, 1);
-                                //pen.DashStyle = DashStyles.Dot;
-
-                                //dc.DrawLine(pen, p1, p2);
                                 graphics.DrawLine(Pens.LightGray, p1, p2);
-
-                                //var ttext = new FormattedText(k.ToString("F1"), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 10, strokeTick);
-                                //ttext.TextAlignment = TextAlignment.Left;
-                                //dc.DrawText(ttext, new Point(p2.X + 3, p2.Y ));
+                                graphics.DrawString(k.ToString("F1"), smallFont, Brushes.Gray, curPlot.x2 + 2, p2.Y, sf);
                             }
                         }
 
                         // рисуем значения yMax и yMin
-                        //// drawText(curPlot.yMax.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y1 + 6);
-                        //// drawText(curPlot.yMin.ToString("F2"), ref labelTextFormat, ref brushblack, ref target, curPlot.x2 + 4, curPlot.y2 - 6);
+                        graphics.DrawString(curPlot.yMax.ToString("F2"), smallFont, Brushes.Black, curPlot.x2 + 2, curPlot.y1, sf);
+                        graphics.DrawString(curPlot.yMin.ToString("F2"), smallFont, Brushes.Black, curPlot.x2 + 2, curPlot.y2, sf);
 
                         float cursorVal = 0;
 
@@ -384,8 +382,15 @@ namespace DXTesting
                         {
                             var a = data.Y[jjj];
                             var b = data.Y[jjj + step];
+                            var c = data.X[jjj];
+                            
+                            var rule = true;
+                            rule = rule && a < curPlot.yMax && a > curPlot.yMin;
+                            rule = rule && b < curPlot.yMax && b > curPlot.yMin;
+                            rule = rule && c < curPlot.xMax && c > curPlot.xMin;
 
-                            if (a < curPlot.yMax && a > curPlot.yMin && b < curPlot.yMax && b > curPlot.yMin)
+
+                            if ( rule )
                             {
                                 Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj]);
                                 Point pt2 = NormalizeN(curPlot, data.X[jjj + step], data.Y[jjj + step]);
@@ -398,11 +403,6 @@ namespace DXTesting
                                 {
                                     Point p1 = new Point(_cursor, (int)curPlot.y1 + 1);
                                     Point p2 = new Point(_cursor, (int)curPlot.y2 - 1);
-
-                                    // canvas.Children.Add(line);
-                                    // RawVector2 stPoint2 = new RawVector2(_cursor, curPlot.y1 + 1);
-                                    // RawVector2 endPoint2 = new RawVector2(_cursor, curPlot.y2 - 1);
-                                    // target.DrawLine(stPoint2, endPoint2, brushblack);
 
                                     graphics.DrawLine(Pens.Black, p1, p2);
 
@@ -425,19 +425,15 @@ namespace DXTesting
                             curVal = cursorVal.ToString("F3");
                         }
 
-                        // drawText(curVal, ref headerTextFormat, ref brushblack, ref target, curPlot.x2 - 4, curPlot.y1 + 2);
-                        //var text = new FormattedText(curVal, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 12, Brushes.Black);
-                        //text.TextAlignment = TextAlignment.Right;
-                        //text.SetFontWeight(FontWeights.Bold);
-
-                        //dc.DrawText(text, new Point(curPlot.x2 - 4, curPlot.y1 + 2));
+                        sf.Alignment = StringAlignment.Far;
+                        sf.LineAlignment = StringAlignment.Near;
+                        graphics.DrawString(curVal, normalFont, Brushes.Blue, curPlot.x2 - 2, curPlot.y1 + 2, sf);
 
                         // рисуем вспомогательное 
-                        // labelTextFormat.TextAlignment = TextAlignment.Leading;
-                        // headerTextFormat.TextAlignment = TextAlignment.Leading;
-                        // labelTextFormat.ParagraphAlignment = ParagraphAlignment.Near;
-                        //  drawText((con.ConnID + 1).ToString(), ref headerTextFormat, ref brushblack, ref target, curPlot.x1 + 4, curPlot.y1 + 2);
-                        //  drawText(con.Serial, ref labelTextFormat, ref brushblack, ref target, curPlot.x1 + 12, curPlot.y1 + 4);
+                        sf.Alignment = StringAlignment.Near;
+                        sf.LineAlignment = StringAlignment.Near;
+
+                        graphics.DrawString((con.ConnID + 1).ToString() + " | " + con.Serial, normalFont, Brushes.Black, curPlot.x1 + 2, curPlot.y1 + 2, sf);
 
                         i++;
                     }

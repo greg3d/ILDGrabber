@@ -106,9 +106,11 @@ namespace DXTesting
 
         int mouseMode = 0;
 
+
         public MainWindow()
         {
             this.Resources["enumToBoolConverter"] = new EnumBooleanConverter();
+
 
             InitializeComponent();
             this.DataContext = new MainWindowViewModel();
@@ -116,7 +118,7 @@ namespace DXTesting
 
             Loaded += MainWindow_Loaded;
             timer.Tick += DoRedrawHandler;
-            //timer.Interval = 20;
+            timer.Interval = 30;
 
             GrabButton.IsEnabled = false;
             StopButton.IsEnabled = false;
@@ -313,7 +315,7 @@ namespace DXTesting
             GrabButton.IsEnabled = false;
             StopButton.IsEnabled = false;
 
-            progressBar2.Visibility = Visibility.Visible;
+            ((MainWindowViewModel)DataContext).ProgBarVisibility = Visibility.Visible;
 
             var progress = new Progress<int>(s => progressBar2.Value = s);
 
@@ -323,7 +325,10 @@ namespace DXTesting
             StopButton.IsEnabled = false;
 
             EnableScaleButtons(true);
-            progressBar2.Visibility = Visibility.Hidden;
+
+            ((MainWindowViewModel)DataContext).ProgBarVisibility = Visibility.Hidden;
+
+            gdi.Redraw();
 
         }
 

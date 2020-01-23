@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DXTesting"
 
-        Title="ILD TCP Grabber | сбор данных | версия 0.89a"  
+        Title="ILD TCP Grabber | сбор данных | версия 0.9 GDI+"  
         x:Name="mw" 
         MinHeight="300" 
         MinWidth="880" 
@@ -131,7 +131,11 @@
                 MouseMove="chartControl1_MouseMove"
                 MouseLeave="chartControl1_MouseLeave" />
         </Canvas>
-        <ProgressBar x:Name="progressBar2" Grid.ColumnSpan="3" Height="29" Margin="10,0,10,132" Grid.Row="3" VerticalAlignment="Bottom"/>
+        <Grid x:Name="progressBarGrid" Grid.ColumnSpan="3" Height="96" Margin="10,0,10,10" Grid.Row="3" VerticalAlignment="Bottom" Visibility="{Binding Path=ProgBarVisibility, Mode=TwoWay}">
+            <ProgressBar x:Name="progressBar2" Visibility="{Binding Path=ProgBarVisibility, Mode=TwoWay}" />
+            <Label x:Name="progBarLabel" Content="Обработка..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="48" FontFamily="Segoe UI Black" Visibility="{Binding Path=ProgBarVisibility, Mode=TwoWay}"/>
+        </Grid>
+        
 
         <!--local:Canvas2DD x:Name="canvas2d2" Width="auto" Height="auto"
                 MouseLeftButtonDown="chartControl1_MouseLeftButtonDown"
