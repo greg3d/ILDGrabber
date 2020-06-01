@@ -20,6 +20,7 @@ namespace DXTesting
         // privates
         private TcpClient client;
         private NetworkStream stream;
+        private MemoryStream bstream;
         private FileStream fs;
         private BinaryWriter FileWriter;
         private BinaryReader FReader;
@@ -27,13 +28,11 @@ namespace DXTesting
         private string ipaddr;
 
         private long ticks = 0;
-        private byte[] measrate;
-        private byte[] outputrs;
-        private byte[] outputnone;
-        private byte[] newLine;
+        private byte[] newLine = Encoding.ASCII.GetBytes(Environment.NewLine);
+        private string console = "";
 
         private bool GrabTrigger = false;
-
+        private bool cmdAck = false;
         private bool demoMode = false;
 
         public Task grabbing;
@@ -60,38 +59,87 @@ namespace DXTesting
             fs?.Close();
             FileWriter?.Close();
             stream?.Close();
+            bstream?.Close();
             client?.Close();
+
             fs?.Dispose();
             FileWriter?.Dispose();
             stream?.Dispose();
+            bstream?.Dispose();
         }
 
         public Connection(int id)
         {
-
-            //indicator = indi;
-
             ConnID = id;
+        }
 
-            var command = "OUTPUT RS422";
-            outputrs = Encoding.ASCII.GetBytes(command);
+        async void SendCmdAsync(string sss)
+        {
+            await Task.Run(() => SendCmd(sss));
+        }
 
-            command = "OUTPUT NONE";
-            outputnone = Encoding.ASCII.GetBytes(command);
+        void rebootTcpStream()
+        {
+            stream?.Close();
+            client?.Close();
+            client = new TcpClient();
 
-            newLine = Encoding.ASCII.GetBytes(Environment.NewLine);
+            client.Connect(ipaddr, PortNum);
+            stream = client.GetStream();
 
         }
 
+        void SendCmd(string scmd)
+        {
+            //cmdAck = false;
+            var cmd = Encoding.ASCII.GetBytes(scmd);
+            stream.Write(cmd, 0, cmd.Length);
+            stream.Write(newLine, 0, newLine.Length);
+
+            var awaitAck = true;
+            console = "";
+
+            //Thread.Sleep(5);
+
+            byte prevByte = 0;
+
+            do
+            {
+                if (stream.DataAvailable)
+                {
+
+                    var size = 0;
+
+                    if (!GrabTrigger)
+                    {
+                        byte[] b = new byte[1];
+                        size = stream.Read(b, 0, 1);
+
+                        console = console + Encoding.ASCII.GetString(b, 0, 1);
+
+                        if (b[0] == 0x3E && prevByte == 0x2D)
+                        {
+                            awaitAck = false;
+                            if (scmd == "OUTPUT RS422")
+                            {
+                               //
+                            }
+                        }
+
+                        prevByte = b[0];
+
+                    }
+                }
+
+            } while (awaitAck);
+
+            //MessageBox.Show(console);
+        }
 
         public void Connect(int port, string srate, double mrate)
         {
-            //client = new TcpClient();
 
             Rate = mrate * 1000;
-
-            string command = "MEASRATE " + srate;
-            measrate = Encoding.ASCII.GetBytes(command);
 
             Settings sets = Settings.getInstance();
             demoMode = sets.Demo;
@@ -132,8 +180,8 @@ namespace DXTesting
                                 client = new TcpClient();
                                 Task connTa = client.ConnectAsync(ipaddr, PortNum);
 
-                                var res = connTa.Wait(300);
-
+                                var res = connTa.Wait(500);
+                               
                                 if (res)
                                 {
                                     IsConnected = true;
@@ -145,8 +193,9 @@ namespace DXTesting
 
                                     localMode = 10;
                                     IsConnected = false;
-                                    client.Close();
+                                    client?.Close();
                                 }
+
                             }
 
                             catch (SocketException e)
@@ -155,8 +204,8 @@ namespace DXTesting
                                 MessageBox.Show(e.Message);
                                 localMode = 10;
                             }
-                            /*
-                            catch (Exception e)
+                            
+                           /* catch (Exception e)
                             {
                                 Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
                                 MessageBox.Show(e.Message);
@@ -166,41 +215,13 @@ namespace DXTesting
                             break;
 
                         case 1: // пытаемся чекнуть лазер 
-
+                           
                             stream = client.GetStream();
 
-                            command = "OUTPUT NONE\r\n";
-                            byte[] outcmd = Encoding.ASCII.GetBytes(command);
-                            stream.Write(outcmd, 0, outcmd.Length);
+                            SendCmd("OUTPUT NONE");
+                            SendCmd("GETINFO");
 
-                            stream.Close();
-                            client.Close();
-
-                            client = new TcpClient();
-                            client.Connect(ipaddr, PortNum);
-                            stream = client.GetStream();
-
-                            // отправка сообщения\\\
-                            command = "GETINFO";
-                            byte[] getinfo = Encoding.ASCII.GetBytes(command);
-
-                            stream.Write(getinfo, 0, getinfo.Length);
-                            stream.Write(newLine, 0, newLine.Length);
-
-                            byte[] data = new byte[128];
-
-                            int size = 0;
-
-                            string infoOut = "";
-
-                            Thread.Sleep(50);
-
-                            while (stream.DataAvailable) // пока данные есть в потоке
-                            {
-                                size = stream.Read(data, 0, data.Length);
-                                infoOut = infoOut + Encoding.ASCII.GetString(data, 0, size);
-                                Thread.Sleep(30);
-                            }
+                            string infoOut = console;
 
                             if (infoOut.Length < 1)
                             {
@@ -212,8 +233,6 @@ namespace DXTesting
                             }
                             else
                             {
-                                stream.Flush();
-
                                 var sArr = infoOut.Split("\n".ToCharArray());
                                 /*
                                  MessageBox.Show(sArr[1]); // name
@@ -223,6 +242,8 @@ namespace DXTesting
                                  MessageBox.Show(sArr[5]);
                                  MessageBox.Show(sArr[6]); // measure range
                                  */
+
+                          
 
                                 string s = sArr[6];
                                 Regex r = new Regex(@"(\d+)");
@@ -234,49 +255,24 @@ namespace DXTesting
 
                                 Notify?.Invoke(this, new ConnectionEventArgs("GetInfoSuccess", ConnID));
                                 localMode = 2;
-
                             }
-
 
                             break;
 
                         case 2:
 
-                            stream.Write(measrate, 0, measrate.Length);
-                            stream.Write(newLine, 0, newLine.Length);
-                            data = new byte[16];
-                            size = 0;
-
-                            Thread.Sleep(50);
-
-                            while (stream.DataAvailable) // пока данные есть в потоке
-                            {
-                                size = stream.Read(data, 0, data.Length);
-                                //Thread.Sleep(100);
-                            }
-
-                            if (size == 0)
-                            {
-                                localMode = 10;
-                                IsConnected = false;
-                                IsReady = false;
-
-                                Notify?.Invoke(this, new ConnectionEventArgs("PrepareError", ConnID));
-
-                            }
-                            else
-                            {
-                                localMode = 10;
-                                IsConnected = true;
-                                IsReady = true;
-
-                                Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
-
-                            }
-                            stream.Close();
-                            client.Close();
+                            SendCmd("OUTADD_RS422 NONE");
+                            SendCmd("RESETCNT TIMESTAMP MEASCNT");
+                            SendCmd("MEASRATE " + srate);
+                            SendCmd("ECHO OFF");
 
 
+                            localMode = 10;
+                            IsConnected = true;
+                            IsReady = true;
+
+                            Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
+                            
                             break;
 
 
@@ -306,7 +302,7 @@ namespace DXTesting
                     TaskContinuationOptions.LongRunning
                 );
                 ticks = 0;
-                GrabTrigger = true;
+                
 
                 if (demoMode)
                 {
@@ -314,11 +310,6 @@ namespace DXTesting
                 }
                 else
                 {
-                    client = new TcpClient();
-
-                    client.Connect(ipaddr, PortNum);
-                    stream = client.GetStream();
-
                     grabbing = tf.StartNew(GrabbingTask);
                 }
 
@@ -342,10 +333,8 @@ namespace DXTesting
                 }
                 else
                 {
-                    stream?.Write(outputnone, 0, outputnone.Length);
-                    stream?.Write(newLine, 0, newLine.Length);
-                    stream?.Close();
-                    client?.Close();
+
+                    SendCmd("OUTPUT NONE");
                 }
 
                 IsGrabbing = false;
@@ -454,26 +443,46 @@ namespace DXTesting
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
 
-                byte[] data = new byte[2048];
+                byte[] data = new byte[4096];
 
                 int size = 0;
 
-                stream.Write(outputrs, 0, outputrs.Length);
-                stream.Write(newLine, 0, newLine.Length);
+                //MessageBox.Show("ok");
 
-                stream.Read(data, 0, 4);
+                SendCmd("OUTPUT RS422");
 
-                stream.Close();
-                client.Close();
+                GrabTrigger = true;
 
-                // Thread.Sleep(100);
-
-                client = new TcpClient();
-
-                client.Connect(ipaddr, PortNum);
-                stream = client.GetStream();
-                //stream.Flush();
                 float preval = -1;
+
+                bool startCheck = true;
+
+                do
+                {
+                    byte[] bbbb = new byte[1];
+                    int ff = stream.Read(bbbb, 0, 1);
+
+                    if (ff > 0)
+                    {
+                        byte H = bbbb[0];
+                        var HH = H & 0b1100_0000;
+
+
+                        //Trace.WriteLine(stream.ToString());
+
+                        //Trace.WriteLine(HH.ToString());
+
+                        if (HH == 192 || HH == 128)
+                        {
+                            startCheck = false;
+                        }
+
+                    }
+
+                }
+                while (startCheck && GrabTrigger);
+
+                rebootTcpStream();
 
                 do
                 {
@@ -482,60 +491,63 @@ namespace DXTesting
 
                     size = stream.Read(data, 0, 2048);
 
-                    Trace.WriteLine(size.ToString());
-
+                    
                     if (size > 0)
                     {
-                        int realSize = (size) / 3;
 
-                        float[] internalCount = new float[realSize];
-                        float[] realValues = new float[realSize];
-                        float[] timeValues = new float[realSize];
+                            int realSize = size / 3;
 
-                        for (int j = 0; j < realValues.Length; j++)
-                        {
-                            ticks++;
+                            float[] internalCount = new float[realSize];
+                            float[] realValues = new float[realSize];
+                            float[] timeValues = new float[realSize];
 
-                            byte low = data[j * 3];
-                            byte mid = data[j * 3 + 1];
-                            byte high = data[j * 3 + 2];
-
-                            float val = (low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + ((high & 0b0000_1111) << 12);
-                            val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
-
-                            var err = high & 0b0111_0000;
-
-                            if (err > 0)
+                            for (int j = 0; j < realValues.Length; j++)
                             {
-                                if (preval < Range / 2f)
+                                ticks++;
+
+                                byte low = data[j * 3];
+                                byte  mid = data[j * 3 + 1];
+                                byte  high = data[j * 3 + 2];
+
+                                float val = (low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + ((high & 0b0000_1111) << 12);
+                                val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
+
+                                var err = high & 0b0111_0000;
+
+                                if (err > 0)
                                 {
-                                    val = -1;
-                                }
-                                else
-                                {
-                                    val = Range + 1;
+                                    if (preval < Range / 2f)
+                                    {
+                                        val = -1;
+                                    }
+                                    else
+                                    {
+                                        val = Range + 1;
+                                    }
+
                                 }
 
+                                preval = val;
+
+                                float tt = (float)ticks / (float)Rate;
+
+                                internalCount[j] = curTick;
+                                realValues[j] = val;
+                                timeValues[j] = tt;
+
+                                var package = new byte[4 * 3];
+
+                                Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
+                                FileWriter.Write(package);
                             }
 
-                            preval = val;
+                            Task.Factory.StartNew(() =>
+                            {
+                                vdata.Push(timeValues, realValues, realSize);
+                            });
 
-                            float tt = (float)ticks / (float)Rate;
-
-                            internalCount[j] = curTick;
-                            realValues[j] = val;
-                            timeValues[j] = tt;
-
-                            var package = new byte[4 * 3];
-
-                            Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
-                            FileWriter.Write(package);
-                        }
-
-                        Task.Factory.StartNew(() =>
-                        {
-                            vdata.Push(timeValues, realValues, realSize);
-                        });
+                        //}                                            
+                        
                     }
                     IsGrabbing = true;
                 }

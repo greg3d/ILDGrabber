@@ -26,7 +26,7 @@
             <ColumnDefinition Width="669*"/>
         </Grid.ColumnDefinitions>
 
-        <Label x:Name="label" Content="x" Margin="0,10,10,10" Background="LightGray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="1" HorizontalAlignment="Right" Width="22" Padding="0,2,0,3" FontSize="10" RenderTransformOrigin="0.667,0.778"/>
+        <Label x:Name="label" Content="x" Margin="0,10,10,10" Background="LightGray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="1" HorizontalAlignment="Right" Width="55" Padding="0,2,0,3" FontSize="10" RenderTransformOrigin="0.667,0.778"/>
         <Button x:Name="ConnectButton" Content="Коннект" Margin="10,48,10,0" Click="ConnectButton_Click" BorderThickness="1" Style="{DynamicResource RoundedButton}" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="31" Grid.RowSpan="2" />
         <Button x:Name="GrabButton" Content="Сбор" Margin="10,111,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}" RenderTransformOrigin="0.505,0.518"/>
         <Button x:Name="StopButton" Content="Стоп" Margin="5,111,9,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>

@@ -12,6 +12,8 @@ namespace DXTesting
         private SaveFormat _currentFormat;
         private Visibility _progBarVisibility = Visibility.Hidden;
 
+        private string _textConsole = "";
+
         private Settings settings = Settings.getInstance();
 
        
@@ -56,6 +58,18 @@ namespace DXTesting
             }
         }
 
+        public string TextConsole
+        {
+            get
+            {
+                return _textConsole;
+            }
+            set
+            {
+                _textConsole = value;
+                OnPropertyChanged("TextConsole");
+            }
+        }
 
 
         public MainWindowViewModel()
