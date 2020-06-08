@@ -14,12 +14,13 @@ namespace DXTesting
             DataContext = new SettingsWindowViewModel();
         }
 
-        private void Accept_Click(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
-            Properties.Settings.Default.Save();
+
+            Settings settings = Settings.getInstance();
+            settings.SaveSettings();
+
+            this.DialogResult = true;           
         }
-
-
     }
 }

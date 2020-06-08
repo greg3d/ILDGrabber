@@ -5,9 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DXTesting"
         mc:Ignorable="d"
-        Title="Настройки" Height="499" Width="269" WindowStartupLocation="CenterScreen">
+        Title="Настройки" Height="540.459" Width="520" MinHeight="500" MinWidth="520" WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
-        <StackPanel Orientation="Vertical">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Vertical" Grid.ColumnSpan="1">
             <StackPanel VerticalAlignment="Top">
                 <Label Content="Частота опроса датчиков" HorizontalAlignment="Left" Padding="0,5,0,2"/>
                 <RadioButton GroupName="CurrentRate" Content="250 Hz"  IsChecked="{ Binding CurrentRate, Converter={StaticResource enumToBoolConverter}, ConverterParameter=rate250Hz }" />
@@ -25,49 +29,88 @@
             </StackPanel>
 
             <StackPanel>
-                <Label Content="Номера портов " HorizontalAlignment="Left" Padding="0,5,0,2"/>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт1:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port1}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт2:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port2}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт3:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port3}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт4:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port4}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт5:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port5}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт6:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port6}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт7:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port7}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт8:" Width="60" />
-                    <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port8}"/>
-                </StackPanel>
                 
+                    <StackPanel>
+                        <Label Content="Номера портов " HorizontalAlignment="Left" Padding="0,5,0,2"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт1:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port1}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт2:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port2}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт3:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port3}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт4:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port4}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт5:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port5}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт6:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port6}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт7:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port7}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Порт8:" Width="60" />
+                            <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Port8}"/>
+                        </StackPanel>
+                    </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Margin="10 0 0 0" Orientation="Vertical" Grid.Column="1">
+            
+                <Label Content="Калибровка смещения нуля:" HorizontalAlignment="Left" Padding="0,5,0,2"/>
+                <RadioButton GroupName="OffsetMode" Content="Стандарт (0 мм)"                   IsChecked="{ Binding OffsetMode, Converter={StaticResource enumToBoolConverter}, ConverterParameter=Standart }" />
+                <RadioButton GroupName="OffsetMode" Content="Симметрично (половина диапазона)"  IsChecked="{ Binding OffsetMode, Converter={StaticResource enumToBoolConverter}, ConverterParameter=Symmetric }" />
+                <RadioButton GroupName="OffsetMode" Content="Ассиметрично: "                    IsChecked="{ Binding OffsetMode, Converter={StaticResource enumToBoolConverter}, ConverterParameter=Assymetric }" />
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 1:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset1}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 2:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset2}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 3:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset3}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 4:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset4}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 5:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset5}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 6:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset6}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 7:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset7}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Датчик 8:" Width="60" />
+                <TextBox Height="23" Width="60" TextWrapping="Wrap" Text="{Binding Path=Offset8}"/>
             </StackPanel>
 
-
         </StackPanel>
-        
 
-        <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Height="24">
-            <Button IsDefault="True" Click="Accept_Click" MinWidth="60" Margin="0,0,10,0">OK</Button>
-            <Button IsCancel="True" MinWidth="60">Отмена</Button>
+        <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Height="43" Width="236">
+            <Button IsDefault="True" MinWidth="60" Margin="0,0,10,0" Height="37" Width="95" Click="Button_Click">OK</Button>
+            <Button IsCancel="True" MinWidth="60" Width="94">Отмена</Button>
         </WrapPanel>
 
     </Grid>

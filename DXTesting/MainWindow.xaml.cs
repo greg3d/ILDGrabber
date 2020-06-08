@@ -233,12 +233,21 @@ namespace DXTesting
                         ConnectButton.IsEnabled = false;
                         GrabButton.IsEnabled = true;
                         StopButton.IsEnabled = false;
+                        buttonOpenCalibration.IsEnabled = true;
                         break;
                     case "AllConnectedError":
                         ConnectButton.IsEnabled = true;
                         GrabButton.IsEnabled = false;
                         StopButton.IsEnabled = false;
+                        buttonOpenCalibration.IsEnabled = false;
                         break;
+                    case "Disconnected":
+                        ConnectButton.IsEnabled = true;
+                        GrabButton.IsEnabled = false;
+                        StopButton.IsEnabled = false;
+                        buttonOpenCalibration.IsEnabled = false;
+                        break;
+
                 }
 
             });
@@ -274,6 +283,12 @@ namespace DXTesting
                     case "PrepareError":
                         indicators[e.LaserID].Fill = System.Windows.Media.Brushes.Red;
                         indicators[e.LaserID].Stroke = System.Windows.Media.Brushes.White;
+                        break;
+                    case "Disconnected":
+                        ConnectButton.IsEnabled = true;
+                        GrabButton.IsEnabled = false;
+                        StopButton.IsEnabled = false;
+                        buttonOpenCalibration.IsEnabled = false;
                         break;
 
 
@@ -488,6 +503,13 @@ namespace DXTesting
         private void buttonOpenService_Click(object sender, RoutedEventArgs e)
         {
             ServiceWindow sWindow = new ServiceWindow();
+            sWindow.ShowDialog();
+            sWindow.Activate();
+        }
+
+        private void buttonOpenCalibration_Click(object sender, RoutedEventArgs e)
+        {
+            CalibrationWindow sWindow = new CalibrationWindow();
             sWindow.ShowDialog();
             sWindow.Activate();
         }

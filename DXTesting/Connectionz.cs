@@ -180,6 +180,19 @@ namespace DXTesting
             }
         }
 
+        public void Calibrate()
+        {
+            MessageBox.Show("Выставите датчики в нужное положение и нажмите ОК...");
+            Settings sets = Settings.getInstance();
+
+            for (int i = 0; i < Count; i++)
+            {
+                cons[i].StartCalibrate();
+
+            }
+
+        }
+
         public int Stop(IProgress<int> progress)
         {
             PrepareReadyList();
@@ -310,19 +323,10 @@ namespace DXTesting
 
             Settings sets = Settings.getInstance();
 
-            var measrate = (int)sets.Fs;
-            double drate = measrate / 1000d;
-
-            NumberFormatInfo nfi = new NumberFormatInfo();
-            nfi.NumberDecimalSeparator = ".";
-            //nfi.NumberDecimalDigits = 2;
-
-            var srate = drate.ToString(nfi);
-
             for (int i = 0; i < Count; i++)
             {
 
-                cons[i].Connect(sets.ports[i], srate, drate);
+                cons[i].Connect(sets.getPort(i+1), sets);
 
             }
 
@@ -380,7 +384,7 @@ namespace DXTesting
 
                     foreach (var item in l)
                     {
-                        header = header + bracket + "port_" + sets.ports[item] + bracket + dlm;
+                        header = header + bracket + "port_" + sets.getPort(item+1) + bracket + dlm;
                         n = cons[item].rdata.X.Length;
                     }
 

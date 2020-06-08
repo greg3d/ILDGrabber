@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -20,24 +21,25 @@ namespace DXTesting
         // privates
         private TcpClient client;
         private NetworkStream stream;
-        private MemoryStream bstream;
         private FileStream fs;
         private BinaryWriter FileWriter;
         private BinaryReader FReader;
         private int PortNum;
         private string ipaddr;
+        private Settings settings;
 
         private long ticks = 0;
         private byte[] newLine = Encoding.ASCII.GetBytes(Environment.NewLine);
         private string console = "";
 
         private bool GrabTrigger = false;
-        private bool cmdAck = false;
         private bool demoMode = false;
 
-        public Task grabbing;
         private TaskFactory tf;
 
+        public Task grabbing;
+        
+        // 
         public int ConnID { get; private set; }
         public string filename { get; private set; }
         public bool IsGrabbing { get; private set; } = false;
@@ -50,22 +52,25 @@ namespace DXTesting
         public RealData vdata { get; private set; }
         public RealData rdata { get; private set; }
         public float Range { get; private set; }
+        public double Offset { get; private set; }
         public string Name { get; private set; }
         public string Serial { get; private set; }
         public double Rate { get; private set; }
 
+        public double CurVal { get; private set; } = 0;
+
         public void Dispose()
         {
+
             fs?.Close();
             FileWriter?.Close();
             stream?.Close();
-            bstream?.Close();
             client?.Close();
 
+            grabbing?.Dispose();
             fs?.Dispose();
             FileWriter?.Dispose();
             stream?.Dispose();
-            bstream?.Dispose();
         }
 
         public Connection(int id)
@@ -136,13 +141,10 @@ namespace DXTesting
             //MessageBox.Show(console);
         }
 
-        public void Connect(int port, string srate, double mrate)
+        public void Connect(int port, Settings sets)
         {
-
-            Rate = mrate * 1000;
-
-            Settings sets = Settings.getInstance();
-            demoMode = sets.Demo;
+            settings = sets;
+            demoMode = settings.Demo;
 
             PortNum = port;
             ipaddr = Properties.Settings.Default.IpAddress;
@@ -253,6 +255,8 @@ namespace DXTesting
                                 Serial = sArr[2].Split(":".ToCharArray())[1];
                                 Range = float.Parse(matches[0].Value);
 
+                                Offset = Range / 2;
+
                                 Notify?.Invoke(this, new ConnectionEventArgs("GetInfoSuccess", ConnID));
                                 localMode = 2;
                             }
@@ -263,7 +267,6 @@ namespace DXTesting
 
                             SendCmd("OUTADD_RS422 NONE");
                             SendCmd("RESETCNT TIMESTAMP MEASCNT");
-                            SendCmd("MEASRATE " + srate);
                             SendCmd("ECHO OFF");
 
 
@@ -286,14 +289,44 @@ namespace DXTesting
 
         }
 
+        public void Disconnect() {
 
+            if (IsConnected)
+            {
+                stream.Close();
+                client.Close();
+                stream = null;
+                client = null;
+                
+            }
+            
+            
+        }
         public void StartGrab()
         {
+
+            var measrate = (int)settings.Fs;
+
+            Offset = settings.getOffset(ConnID+1);
+
+
+            Rate = measrate * 1000;
+            double drate = measrate / 1000d;
+
+            NumberFormatInfo nfi = new NumberFormatInfo();
+            nfi.NumberDecimalSeparator = ".";
+            //nfi.NumberDecimalDigits = 2;
+
+            var srate = drate.ToString(nfi);
+
+            
+
             IsPostProc = false;
             IsGrabbing = false;
 
             if (IsReady)
             {
+                SendCmd("MEASRATE " + srate);
 
                 vdata = new RealData(5000, true);
 
@@ -348,6 +381,47 @@ namespace DXTesting
                 //NeedRedraw?.Invoke(this);
                 Notify?.Invoke(this, new ConnectionEventArgs("GrabbedSuccess", ConnID));
             }
+        }
+
+        public void StartCalibrate()
+        {
+
+            Rate = 500;
+            var srate = 0.5;
+            
+            IsPostProc = false;
+            IsGrabbing = false;
+
+            if (IsReady)
+            {
+                SendCmd("MEASRATE " + srate);
+                
+                tf = new TaskFactory(
+                    TaskCreationOptions.LongRunning,
+                    TaskContinuationOptions.LongRunning
+                );
+                
+                if (demoMode)
+                {
+                    //grabbing = tf.StartNew(DemoGrabbingTask);
+                }
+                else
+                {
+                    grabbing = tf.StartNew(CalibrateTask);
+                }
+
+                grabbing.Wait();
+                SendCmd("OUTPUT NONE");
+                IsGrabbing = false;
+
+
+                settings.setOffset(ConnID+1, Math.Round(CurVal, 3));
+
+                MessageBox.Show("Готово!");
+
+                //Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
+            }
+
         }
 
         public void PrepareForView()
@@ -453,7 +527,7 @@ namespace DXTesting
 
                 GrabTrigger = true;
 
-                float preval = -1;
+                float preval = 0;
 
                 bool startCheck = true;
 
@@ -529,6 +603,8 @@ namespace DXTesting
 
                                 preval = val;
 
+                                val = val - (float)Offset;
+
                                 float tt = (float)ticks / (float)Rate;
 
                                 internalCount[j] = curTick;
@@ -552,6 +628,89 @@ namespace DXTesting
                     IsGrabbing = true;
                 }
                 while (GrabTrigger); // пока данные есть в потоке
+            }
+        }
+
+        private void CalibrateTask()
+        {
+
+            if (IsConnected && IsReady)
+            {
+
+                byte[] data = new byte[4096];
+
+                int size = 0;
+
+                SendCmd("OUTPUT RS422");
+
+                GrabTrigger = true;
+
+                float preval = 0;
+
+                bool startCheck = true;
+
+                do
+                {
+                    byte[] bbbb = new byte[1];
+                    int ff = stream.Read(bbbb, 0, 1);
+
+                    if (ff > 0)
+                    {
+                        byte H = bbbb[0];
+                        var HH = H & 0b1100_0000;
+                        
+                        if (HH == 192 || HH == 128)
+                        {
+                            startCheck = false;
+                        }
+
+                    }
+
+                }
+                while (startCheck && GrabTrigger);
+
+                rebootTcpStream();
+
+                do
+                {
+                    size = stream.Read(data, 0, 2048);
+
+                    if (size > 0)
+                    {
+
+                        int realSize = size / 3;
+                        
+                        for (int j = 0; j < realSize; j++)
+                        {
+                            ticks++;
+
+                            byte low = data[j * 3];
+                            byte mid = data[j * 3 + 1];
+                            byte high = data[j * 3 + 2];
+
+                            float val = (low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + ((high & 0b0000_1111) << 12);
+                            val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
+
+                            preval = val;
+
+                            if (j == 0)
+                            {
+                                CurVal = val;
+                            } else
+                            {
+                                CurVal += val;
+                            }
+                        }
+
+                        CurVal = CurVal / size;
+
+                    }
+                    IsGrabbing = false;
+                    GrabTrigger = false;
+                }
+                while (GrabTrigger); // пока данные есть в потоке
+
+                
             }
         }
     }
