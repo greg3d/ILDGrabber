@@ -1,6 +1,4 @@
 ﻿using System;
-//using System.Windows;
-//using System.Windows.Media;
 using System.Drawing;
 
 namespace DXTesting
@@ -15,6 +13,8 @@ namespace DXTesting
         public float xMax;
         public float yMin;
         public float yMax;
+        public double offset;
+        public double range;
 
         public Plot()
         {
@@ -100,11 +100,22 @@ namespace DXTesting
 
         private Point NormalizeN(Plot curPlot, double x, double y)
         {
+            if (double.IsPositiveInfinity(y))
+            {
+                y = curPlot.range - curPlot.offset;
+            }
+
+            if (double.IsNegativeInfinity(y))
+            {
+                y = 0 - curPlot.offset;
+            }
+
             Point retVec = new Point
             {
                 X = (int)(curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin)),
                 Y = (int)(curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin))
             };
+            
             return retVec;
         }
 
@@ -190,20 +201,24 @@ namespace DXTesting
 
                 foreach (var val in Y)
                 {
-                    if (val > curPlot.yMax)
-                    {
-                        curPlot.yMax = val;
-                    }
 
-                    if (val < curPlot.yMin)
+                    if (!Single.IsInfinity(val))
                     {
-                        curPlot.yMin = val;
-                    }
+                        if (val > curPlot.yMax)
+                        {
+                            curPlot.yMax = val;
+                        }
 
-                    if (curPlot.yMax == curPlot.yMin)
-                    {
-                        curPlot.yMax = curPlot.yMax + 1;
-                        curPlot.yMin = curPlot.yMin - 1;
+                        if (val < curPlot.yMin)
+                        {
+                            curPlot.yMin = val;
+                        }
+
+                        if (curPlot.yMax == curPlot.yMin)
+                        {
+                            curPlot.yMax = curPlot.yMax + 1;
+                            curPlot.yMin = curPlot.yMin - 1;
+                        }
                     }
                 }
 
@@ -269,6 +284,7 @@ namespace DXTesting
                 {
                     if (con.IsReady && con.IsVisible && (IsGrabbing ^ IsPostProc))
                     {
+                        
 
                         var curPlot = plotList[i];
 
@@ -276,6 +292,9 @@ namespace DXTesting
                         curPlot.x2 = (float)ActualWidth - xx - marginRight;
                         curPlot.y1 = yy + i * plotHeight + marginTop;
                         curPlot.y2 = yy + i * plotHeight + plotHeight - marginBottom;
+
+                        curPlot.range = con.Range;
+                        curPlot.offset = con.Offset;
 
 
                         graphics.DrawRectangle(
@@ -375,29 +394,36 @@ namespace DXTesting
                         graphics.DrawString(curPlot.yMin.ToString("F2"), smallFont, Brushes.Black, curPlot.x2 + 2, curPlot.y2, sf);
 
                         float cursorVal = 0;
-
-
+                        
                         // Рисуем сам график
                         for (int jjj = 0; jjj < N - step; jjj = jjj + step)
                         {
+
+                            var curPen = Pens.Blue;
+                            double add1 = 0;
+
+                            if (float.IsInfinity(data.Y[jjj]))
+                            {
+                                curPen = new Pen(Color.Red, 2);
+                            }
+
                             var a = data.Y[jjj];
                             var b = data.Y[jjj + step];
                             var c = data.X[jjj];
-                            
+
                             var rule = true;
-                            rule = rule && a < curPlot.yMax && a > curPlot.yMin;
-                            rule = rule && b < curPlot.yMax && b > curPlot.yMin;
-                            rule = rule && c < curPlot.xMax && c > curPlot.xMin;
+                            //rule = rule && a <= curPlot.yMax && a >= curPlot.yMin;
+                            //rule = rule && b <= curPlot.yMax && b >= curPlot.yMin;
+                            rule = rule && c <= curPlot.xMax && c >= curPlot.xMin;
+                            
 
-
-                            if ( rule )
+                            if (rule)
                             {
-                                Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj]);
-                                Point pt2 = NormalizeN(curPlot, data.X[jjj + step], data.Y[jjj + step]);
-
-                                graphics.DrawLine(Pens.Blue, pt, pt2);
-
-
+                                Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj] + add1);
+                                Point pt2 = NormalizeN(curPlot, data.X[jjj + step], data.Y[jjj + step] + add1);
+                                
+                                graphics.DrawLine(curPen, pt, pt2);
+                                
                                 // РИСУЕМ КУРСОР 
                                 if (IsPostProc && _cursor > 0 && _cursor == Math.Round((double)pt.X))
                                 {
@@ -410,24 +436,35 @@ namespace DXTesting
                                 }
                             }
 
-                            
+
                         }
 
                         // рисуем текущее значение
+                        var curBrush = Brushes.Blue;
 
                         string curVal;
+                        float valFloat;
+
                         if (IsGrabbing)
                         {
-                            curVal = data.Y[N - 1].ToString("F3");
+                            valFloat = data.Y[N - 1];
                         }
                         else
                         {
-                            curVal = cursorVal.ToString("F3");
+                            valFloat = cursorVal;
                         }
+
+                        if (float.IsInfinity(valFloat))
+                        {
+                            curBrush = Brushes.Red;
+                        }
+
+                        curVal = valFloat.ToString("F3");
 
                         sf.Alignment = StringAlignment.Far;
                         sf.LineAlignment = StringAlignment.Near;
-                        graphics.DrawString(curVal, normalFont, Brushes.Blue, curPlot.x2 - 2, curPlot.y1 + 2, sf);
+
+                        graphics.DrawString(curVal, normalFont, curBrush, curPlot.x2 - 2, curPlot.y1 + 2, sf);
 
                         // рисуем вспомогательное 
                         sf.Alignment = StringAlignment.Near;

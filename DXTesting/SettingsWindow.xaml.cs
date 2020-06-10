@@ -20,7 +20,7 @@ namespace DXTesting
             Settings settings = Settings.getInstance();
             settings.SaveSettings();
 
-            this.DialogResult = true;           
+            this.DialogResult = true;
         }
     }
 }

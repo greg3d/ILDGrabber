@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Sockets;
@@ -38,7 +37,7 @@ namespace DXTesting
         private TaskFactory tf;
 
         public Task grabbing;
-        
+
         // 
         public int ConnID { get; private set; }
         public string filename { get; private set; }
@@ -47,7 +46,6 @@ namespace DXTesting
         public bool IsConnected { get; private set; } = false;
         public bool IsReady { get; private set; } = false;
         public bool IsVisible { get; set; } = true;
-
 
         public RealData vdata { get; private set; }
         public RealData rdata { get; private set; }
@@ -127,7 +125,7 @@ namespace DXTesting
                             awaitAck = false;
                             if (scmd == "OUTPUT RS422")
                             {
-                               //
+                                //
                             }
                         }
 
@@ -147,9 +145,9 @@ namespace DXTesting
             demoMode = settings.Demo;
 
             PortNum = port;
-            ipaddr = Properties.Settings.Default.IpAddress;
+            ipaddr = settings.IpAddress;
 
-            var sdir = Properties.Settings.Default.SaveDir + "\\";
+            var sdir = settings.SaveDir + "\\";
 
             if (!Directory.Exists(sdir))
             {
@@ -183,7 +181,7 @@ namespace DXTesting
                                 Task connTa = client.ConnectAsync(ipaddr, PortNum);
 
                                 var res = connTa.Wait(500);
-                               
+
                                 if (res)
                                 {
                                     IsConnected = true;
@@ -206,18 +204,18 @@ namespace DXTesting
                                 MessageBox.Show(e.Message);
                                 localMode = 10;
                             }
-                            
-                           /* catch (Exception e)
-                            {
-                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
-                                MessageBox.Show(e.Message);
-                                localMode = 10;
-                            }*/
+
+                            /* catch (Exception e)
+                             {
+                                 Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
+                                 MessageBox.Show(e.Message);
+                                 localMode = 10;
+                             }*/
 
                             break;
 
                         case 1: // пытаемся чекнуть лазер 
-                           
+
                             stream = client.GetStream();
 
                             SendCmd("OUTPUT NONE");
@@ -245,7 +243,7 @@ namespace DXTesting
                                  MessageBox.Show(sArr[6]); // measure range
                                  */
 
-                          
+
 
                                 string s = sArr[6];
                                 Regex r = new Regex(@"(\d+)");
@@ -275,7 +273,7 @@ namespace DXTesting
                             IsReady = true;
 
                             Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
-                            
+
                             break;
 
 
@@ -289,7 +287,8 @@ namespace DXTesting
 
         }
 
-        public void Disconnect() {
+        public void Disconnect()
+        {
 
             if (IsConnected)
             {
@@ -297,18 +296,15 @@ namespace DXTesting
                 client.Close();
                 stream = null;
                 client = null;
-                
+
             }
-            
-            
+
+
         }
         public void StartGrab()
         {
 
             var measrate = (int)settings.Fs;
-
-            Offset = settings.getOffset(ConnID+1);
-
 
             Rate = measrate * 1000;
             double drate = measrate / 1000d;
@@ -319,7 +315,7 @@ namespace DXTesting
 
             var srate = drate.ToString(nfi);
 
-            
+
 
             IsPostProc = false;
             IsGrabbing = false;
@@ -335,7 +331,7 @@ namespace DXTesting
                     TaskContinuationOptions.LongRunning
                 );
                 ticks = 0;
-                
+
 
                 if (demoMode)
                 {
@@ -388,19 +384,19 @@ namespace DXTesting
 
             Rate = 500;
             var srate = 0.5;
-            
+
             IsPostProc = false;
             IsGrabbing = false;
 
             if (IsReady)
             {
                 SendCmd("MEASRATE " + srate);
-                
+
                 tf = new TaskFactory(
                     TaskCreationOptions.LongRunning,
                     TaskContinuationOptions.LongRunning
                 );
-                
+
                 if (demoMode)
                 {
                     //grabbing = tf.StartNew(DemoGrabbingTask);
@@ -415,7 +411,7 @@ namespace DXTesting
                 IsGrabbing = false;
 
 
-                settings.setOffset(ConnID+1, Math.Round(CurVal, 3));
+                settings.setOffset(ConnID + 1, Math.Round(CurVal, 3));
 
                 MessageBox.Show("Готово!");
 
@@ -514,6 +510,21 @@ namespace DXTesting
             if (IsConnected && IsReady)
             {
 
+                if (settings.OffsetMode == OffsetModeList.Standart)
+                {
+                    Offset = 0;
+                }
+
+                if (settings.OffsetMode == OffsetModeList.Symmetric)
+                {
+                    Offset = Range / 2;
+                }
+
+                if (settings.OffsetMode == OffsetModeList.Assymetric)
+                {
+                    Offset = settings.getOffset(ConnID + 1);
+                }
+
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
 
@@ -565,65 +576,70 @@ namespace DXTesting
 
                     size = stream.Read(data, 0, 2048);
 
-                    
+
                     if (size > 0)
                     {
 
-                            int realSize = size / 3;
+                        int realSize = size / 3;
 
-                            float[] internalCount = new float[realSize];
-                            float[] realValues = new float[realSize];
-                            float[] timeValues = new float[realSize];
+                        float[] internalCount = new float[realSize];
+                        float[] realValues = new float[realSize];
+                        float[] timeValues = new float[realSize];
 
-                            for (int j = 0; j < realValues.Length; j++)
+                        for (int j = 0; j < realValues.Length; j++)
+                        {
+                            ticks++;
+
+                            byte low = data[j * 3];
+                            byte mid = data[j * 3 + 1];
+                            byte high = data[j * 3 + 2];
+
+                            float val = (low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + ((high & 0b0000_1111) << 12);
+                            val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
+
+                            var err = high & 0b0011_0000;
+                            ///err <<= 4;
+
+                            if (err > 0)
                             {
-                                ticks++;
 
-                                byte low = data[j * 3];
-                                byte  mid = data[j * 3 + 1];
-                                byte  high = data[j * 3 + 2];
-
-                                float val = (low & 0b0011_1111) + (float)((mid & 0b0011_1111) << 6) + ((high & 0b0000_1111) << 12);
-                                val = 0.01f * ((102f / 65520f) * val - 1f) * Range;
-
-                                var err = high & 0b0111_0000;
-
-                                if (err > 0)
+                                if (preval < Range / 2f)
                                 {
-                                    if (preval < Range / 2f)
-                                    {
-                                        val = -1;
-                                    }
-                                    else
-                                    {
-                                        val = Range + 1;
-                                    }
-
+                                    val = float.NegativeInfinity;
+                                }
+                                else
+                                {
+                                    val = float.PositiveInfinity;
                                 }
 
-                                preval = val;
-
+                            }
+                            else
+                            {
                                 val = val - (float)Offset;
-
-                                float tt = (float)ticks / (float)Rate;
-
-                                internalCount[j] = curTick;
-                                realValues[j] = val;
-                                timeValues[j] = tt;
-
-                                var package = new byte[4 * 3];
-
-                                Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
-                                FileWriter.Write(package);
                             }
 
-                            Task.Factory.StartNew(() =>
-                            {
-                                vdata.Push(timeValues, realValues, realSize);
-                            });
+                            preval = val;
+
+
+                            float tt = (float)ticks / (float)Rate;
+
+                            internalCount[j] = curTick;
+                            realValues[j] = val;
+                            timeValues[j] = tt;
+
+                            var package = new byte[4 * 3];
+
+                            Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
+                            FileWriter.Write(package);
+                        }
+
+                        Task.Factory.StartNew(() =>
+                        {
+                            vdata.Push(timeValues, realValues, realSize);
+                        });
 
                         //}                                            
-                        
+
                     }
                     IsGrabbing = true;
                 }
@@ -658,7 +674,7 @@ namespace DXTesting
                     {
                         byte H = bbbb[0];
                         var HH = H & 0b1100_0000;
-                        
+
                         if (HH == 192 || HH == 128)
                         {
                             startCheck = false;
@@ -679,7 +695,7 @@ namespace DXTesting
                     {
 
                         int realSize = size / 3;
-                        
+
                         for (int j = 0; j < realSize; j++)
                         {
                             ticks++;
@@ -696,7 +712,8 @@ namespace DXTesting
                             if (j == 0)
                             {
                                 CurVal = val;
-                            } else
+                            }
+                            else
                             {
                                 CurVal += val;
                             }
@@ -710,7 +727,7 @@ namespace DXTesting
                 }
                 while (GrabTrigger); // пока данные есть в потоке
 
-                
+
             }
         }
     }

@@ -16,7 +16,7 @@ namespace DXTesting
 
         private Settings settings = Settings.getInstance();
 
-       
+
         public Visibility ProgBarVisibility
         {
             get

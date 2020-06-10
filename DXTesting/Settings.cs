@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows;
 
 namespace DXTesting
 {
@@ -44,7 +43,7 @@ namespace DXTesting
         {
             get
             {
-                return (OffsetModeList)Properties.Settings.Default.OffsetMode; 
+                return (OffsetModeList)Properties.Settings.Default.OffsetMode;
             }
             set
             {
@@ -150,7 +149,7 @@ namespace DXTesting
             var str = String.Join(";", arr);
 
             Properties.Settings.Default.Offsets = str;
-            
+
             //сейвим
             Properties.Settings.Default.Save();
         }

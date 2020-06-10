@@ -479,11 +479,11 @@ namespace DXTesting
         }
 
         private void chartControl1_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {   
+        {
             if (gField.IsMouseCaptured)
             {
-               mouseMode = 0;
-               gField.ReleaseMouseCapture();
+                mouseMode = 0;
+                gField.ReleaseMouseCapture();
             }
         }
 

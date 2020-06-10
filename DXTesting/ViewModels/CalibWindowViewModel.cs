@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 namespace DXTesting
 {
@@ -11,7 +10,8 @@ namespace DXTesting
 
         public double Offset1
         {
-            get {
+            get
+            {
                 return settings.getOffset(1);
             }
             set

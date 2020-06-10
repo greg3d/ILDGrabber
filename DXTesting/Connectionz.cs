@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-//using System.Windows;
 using System.Windows.Forms;
 
 namespace DXTesting
@@ -326,7 +324,7 @@ namespace DXTesting
             for (int i = 0; i < Count; i++)
             {
 
-                cons[i].Connect(sets.getPort(i+1), sets);
+                cons[i].Connect(sets.getPort(i + 1), sets);
 
             }
 
@@ -384,7 +382,7 @@ namespace DXTesting
 
                     foreach (var item in l)
                     {
-                        header = header + bracket + "port_" + sets.getPort(item+1) + bracket + dlm;
+                        header = header + bracket + "port_" + sets.getPort(item + 1) + bracket + dlm;
                         n = cons[item].rdata.X.Length;
                     }
 
