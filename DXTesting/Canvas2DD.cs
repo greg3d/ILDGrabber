@@ -115,7 +115,7 @@ namespace DXTesting
                 X = (int)(curPlot.x1 + (x - curPlot.xMin) * (curPlot.x2 - curPlot.x1) / (curPlot.xMax - curPlot.xMin)),
                 Y = (int)(curPlot.y2 - (y - curPlot.yMin) * (curPlot.y2 - curPlot.y1) / (curPlot.yMax - curPlot.yMin))
             };
-            
+
             return retVec;
         }
 
@@ -284,7 +284,7 @@ namespace DXTesting
                 {
                     if (con.IsReady && con.IsVisible && (IsGrabbing ^ IsPostProc))
                     {
-                        
+
 
                         var curPlot = plotList[i];
 
@@ -394,7 +394,7 @@ namespace DXTesting
                         graphics.DrawString(curPlot.yMin.ToString("F2"), smallFont, Brushes.Black, curPlot.x2 + 2, curPlot.y2, sf);
 
                         float cursorVal = 0;
-                        
+
                         // Рисуем сам график
                         for (int jjj = 0; jjj < N - step; jjj = jjj + step)
                         {
@@ -415,15 +415,15 @@ namespace DXTesting
                             //rule = rule && a <= curPlot.yMax && a >= curPlot.yMin;
                             //rule = rule && b <= curPlot.yMax && b >= curPlot.yMin;
                             rule = rule && c <= curPlot.xMax && c >= curPlot.xMin;
-                            
+
 
                             if (rule)
                             {
                                 Point pt = NormalizeN(curPlot, data.X[jjj], data.Y[jjj] + add1);
                                 Point pt2 = NormalizeN(curPlot, data.X[jjj + step], data.Y[jjj + step] + add1);
-                                
+
                                 graphics.DrawLine(curPen, pt, pt2);
-                                
+
                                 // РИСУЕМ КУРСОР 
                                 if (IsPostProc && _cursor > 0 && _cursor == Math.Round((double)pt.X))
                                 {

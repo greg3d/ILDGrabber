@@ -11,13 +11,14 @@ using System.Windows;
 namespace DXTesting
 
 {
-    class Connection : IDisposable
+    class Connection : BaseViewModel, IDisposable
     {
         //Events and event delegates
         public delegate void StatusHandler(object sender, ConnectionEventArgs e);
         public event StatusHandler Notify;
 
         // privates
+        private string _status;
         private TcpClient client;
         private NetworkStream stream;
         private FileStream fs;
@@ -54,6 +55,18 @@ namespace DXTesting
         public string Name { get; private set; }
         public string Serial { get; private set; }
         public double Rate { get; private set; }
+        public string TextStatus
+        {
+            get
+            {
+                return _status;
+            }
+            set
+            {
+                _status = value;
+                OnPropertyChanged("TextStatus");
+            }
+        }
 
         public double CurVal { get; private set; } = 0;
 
@@ -74,11 +87,13 @@ namespace DXTesting
         public Connection(int id)
         {
             ConnID = id;
+            TextStatus = "x";
         }
 
         async void SendCmdAsync(string sss)
         {
             await Task.Run(() => SendCmd(sss));
+
         }
 
         void rebootTcpStream()
@@ -94,6 +109,7 @@ namespace DXTesting
 
         void SendCmd(string scmd)
         {
+            //bool result = false;
             //cmdAck = false;
             var cmd = Encoding.ASCII.GetBytes(scmd);
             stream.Write(cmd, 0, cmd.Length);
@@ -105,7 +121,7 @@ namespace DXTesting
             //Thread.Sleep(5);
 
             byte prevByte = 0;
-
+            int counter = 0;
             do
             {
                 if (stream.DataAvailable)
@@ -123,6 +139,7 @@ namespace DXTesting
                         if (b[0] == 0x3E && prevByte == 0x2D)
                         {
                             awaitAck = false;
+                            //result = true;
                             if (scmd == "OUTPUT RS422")
                             {
                                 //
@@ -130,17 +147,25 @@ namespace DXTesting
                         }
 
                         prevByte = b[0];
-
                     }
                 }
+                else
+                {
+                    Thread.Sleep(10);
+                    counter += 10;
+                }
 
-            } while (awaitAck);
 
+            } while (awaitAck && counter < 1000);
+
+            //return result;  && counter < 1000
             //MessageBox.Show(console);
         }
 
-        public void Connect(int port, Settings sets)
+        public int Connect(int port, Settings sets)
         {
+            int localMode = 0;
+
             settings = sets;
             demoMode = settings.Demo;
 
@@ -162,16 +187,18 @@ namespace DXTesting
                 IsConnected = true;
                 IsReady = true;
                 Range = 50;
+                Offset = 0;
+
                 Name = "test laser" + ConnID.ToString();
                 Serial = "0000";
                 Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
+                localMode = 100;
             }
             else
             {
-                int localMode = 0;
+                
                 while (localMode < 10)
                 {
-
                     switch (localMode)
                     {
                         case 0:
@@ -191,7 +218,7 @@ namespace DXTesting
                                 {
                                     Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
 
-                                    localMode = 10;
+                                    localMode = 11;
                                     IsConnected = false;
                                     client?.Close();
                                 }
@@ -202,15 +229,15 @@ namespace DXTesting
                             {
                                 Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
                                 MessageBox.Show(e.Message);
-                                localMode = 10;
+                                localMode = 12;
                             }
 
-                            /* catch (Exception e)
-                             {
-                                 Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
-                                 MessageBox.Show(e.Message);
-                                 localMode = 10;
-                             }*/
+                            catch (Exception e)
+                            {
+                                Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
+                                MessageBox.Show(e.Message);
+                                localMode = 13;
+                            }
 
                             break;
 
@@ -219,6 +246,9 @@ namespace DXTesting
                             stream = client.GetStream();
 
                             SendCmd("OUTPUT NONE");
+
+                            rebootTcpStream();
+
                             SendCmd("GETINFO");
 
                             string infoOut = console;
@@ -229,7 +259,7 @@ namespace DXTesting
                                 client.Close();
 
                                 Notify?.Invoke(this, new ConnectionEventArgs("GetInfoError", ConnID));
-                                localMode = 10;
+                                localMode = 15;
                             }
                             else
                             {
@@ -242,8 +272,6 @@ namespace DXTesting
                                  MessageBox.Show(sArr[5]);
                                  MessageBox.Show(sArr[6]); // measure range
                                  */
-
-
 
                                 string s = sArr[6];
                                 Regex r = new Regex(@"(\d+)");
@@ -281,10 +309,12 @@ namespace DXTesting
                             break;
                     }
 
-
+                    TextStatus = localMode.ToString();
                 } // endwhile
             }
 
+
+            return localMode;
         }
 
         public void Disconnect()
@@ -381,7 +411,7 @@ namespace DXTesting
 
         public void StartCalibrate()
         {
-
+            TextStatus = "0";
             Rate = 500;
             var srate = 0.5;
 
@@ -615,10 +645,9 @@ namespace DXTesting
                             }
                             else
                             {
+                                preval = val;
                                 val = val - (float)Offset;
                             }
-
-                            preval = val;
 
 
                             float tt = (float)ticks / (float)Rate;
@@ -632,6 +661,8 @@ namespace DXTesting
                             Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
                             FileWriter.Write(package);
                         }
+
+                        //TextStatus = Range.ToString("F1");
 
                         Task.Factory.StartNew(() =>
                         {

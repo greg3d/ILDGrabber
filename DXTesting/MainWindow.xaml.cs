@@ -99,6 +99,7 @@ namespace DXTesting
         private System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
 
         private Ellipse[] indicators;
+        private CheckBox[] checkBoxes;
 
         private Point startPoint = new Point();
         private Point superStartPoint = new Point();
@@ -115,24 +116,28 @@ namespace DXTesting
             InitializeComponent();
             this.DataContext = new MainWindowViewModel();
 
-
+            // вешаем событие для перерисовки
             Loaded += MainWindow_Loaded;
             timer.Tick += DoRedrawHandler;
-            timer.Interval = 30;
+            timer.Interval = 25;
 
+            // начальное положение кнопок
             GrabButton.IsEnabled = false;
             StopButton.IsEnabled = false;
             ConnectButton.IsEnabled = true;
 
+            // ссылка на объект с набором лазеров 
             Connectionz cons = Connectionz.getInstance();
+
+            // вешаем событие на прием сообщений от объекта с лазерами
             cons.SendMessage += ButtonsDisabling;
-            //cons.ProgressChanged += ProgressChangedHandler;
 
             for (int i = 0; i < cons.cons.Length; i++)
             {
                 cons.cons[i].Notify += SetConnIndicator;
             }
 
+            // индикаторы и чек боксы и тексБоксы
             indicators = new Ellipse[8];
 
             indicators[0] = EStatus1;
@@ -144,53 +149,48 @@ namespace DXTesting
             indicators[6] = EStatus7;
             indicators[7] = EStatus8;
 
-            Binding bind = new Binding();
-            bind.Source = cons.cons[0];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox1.SetBinding(CheckBox.IsCheckedProperty, bind);
+            checkBoxes = new CheckBox[8];
+            checkBoxes[0] = checkBox1;
+            checkBoxes[1] = checkBox2;
+            checkBoxes[2] = checkBox3;
+            checkBoxes[3] = checkBox4;
+            checkBoxes[4] = checkBox5;
+            checkBoxes[5] = checkBox6;
+            checkBoxes[6] = checkBox7;
+            checkBoxes[7] = checkBox8;
 
-            bind = new Binding();
-            bind.Source = cons.cons[1];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox2.SetBinding(CheckBox.IsCheckedProperty, bind);
+            var textBoxes = new TextBox[8];
+            textBoxes[0] = textBox1;
+            textBoxes[1] = textBox2;
+            textBoxes[2] = textBox3;
+            textBoxes[3] = textBox4;
+            textBoxes[4] = textBox5;
+            textBoxes[5] = textBox6;
+            textBoxes[6] = textBox7;
+            textBoxes[7] = textBox8;
 
-            bind = new Binding();
-            bind.Source = cons.cons[2];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox3.SetBinding(CheckBox.IsCheckedProperty, bind);
+            // биндим свойства видимости на галочках
 
-            bind = new Binding();
-            bind.Source = cons.cons[3];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox4.SetBinding(CheckBox.IsCheckedProperty, bind);
+            for (int i = 0; i < checkBoxes.Length; i++)
+            {
+                Binding bind = new Binding();
+                bind.Source = cons.cons[i];
+                bind.Path = new PropertyPath("IsVisible");
+                bind.Mode = BindingMode.TwoWay;
+                checkBoxes[i].SetBinding(CheckBox.IsCheckedProperty, bind);
+            }
 
-            bind = new Binding();
-            bind.Source = cons.cons[4];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox5.SetBinding(CheckBox.IsCheckedProperty, bind);
+            // биндим свойство статуса на боксах
 
-            bind = new Binding();
-            bind.Source = cons.cons[5];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox6.SetBinding(CheckBox.IsCheckedProperty, bind);
+            for (int i = 0; i < textBoxes.Length; i++)
+            {
+                Binding bind = new Binding();
+                bind.Source = cons.cons[i];
+                bind.Path = new PropertyPath("TextStatus");
+                bind.Mode = BindingMode.TwoWay;
+                textBoxes[i].SetBinding(TextBox.TextProperty, bind);
+            }
 
-            bind = new Binding();
-            bind.Source = cons.cons[6];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox7.SetBinding(CheckBox.IsCheckedProperty, bind);
-
-            bind = new Binding();
-            bind.Source = cons.cons[7];
-            bind.Path = new PropertyPath("IsVisible");
-            bind.Mode = BindingMode.TwoWay;
-            checkBox8.SetBinding(CheckBox.IsCheckedProperty, bind);
         }
 
         private void EnableScaleButtons(bool status)

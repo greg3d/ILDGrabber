@@ -321,14 +321,14 @@ namespace DXTesting
 
             Settings sets = Settings.getInstance();
 
+
             for (int i = 0; i < Count; i++)
             {
-
                 cons[i].Connect(sets.getPort(i + 1), sets);
-
             }
-
+                        
             PrepareReadyList();
+
             if (this.ReadyCount > 0)
             {
                 SendMessage?.Invoke(this, new ConzEventArgs("AllConnectedSuccess"));
