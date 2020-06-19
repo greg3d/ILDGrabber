@@ -1,0 +1,132 @@
+﻿<Window x:Class="DXTesting.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DXTesting"
+        mc:Ignorable="d"
+        Title="ILD TCP Grabber | сбор данных | версия 0.89a"  x:Name="mw" MinHeight="300" MinWidth="880" Width="880" Height="541">
+    <Grid Background="#FFEEEEF2" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="290"/>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="150*" MinHeight="150"/>
+
+
+
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="112*" MaxWidth="130"/>
+            <ColumnDefinition Width="112*" MaxWidth="130"/>
+            <ColumnDefinition Width="669*"/>
+        </Grid.ColumnDefinitions>
+        <local:ChartControl x:Name="chartControl1" Grid.Column="2" Grid.Row="1" 
+                            MouseLeftButtonDown="chartControl1_MouseLeftButtonDown" 
+                            MouseMove="chartControl1_MouseMove" 
+                            MouseLeftButtonUp="chartControl1_MouseLeftButtonUp" 
+                            MouseLeave="chartControl1_MouseLeave"
+                            MouseRightButtonDown="chartControl1_MouseRightButtonDown"
+                            MouseRightButtonUp="chartControl1_MouseRightButtonUp" 
+                            Margin="0,0,0,10" Grid.RowSpan="3"
+                            />
+        <Label x:Name="label" Content="{Binding Fps, ElementName=chartControl1 }" Margin="0,10,10,10" Background="LightGray" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="1" HorizontalAlignment="Right" Width="22" Padding="0,2,0,3" FontSize="10" RenderTransformOrigin="0.667,0.778"/>
+        <Button x:Name="ConnectButton" Content="Коннект" Margin="10,48,10,0" Click="ConnectButton_Click" BorderThickness="1" Style="{DynamicResource RoundedButton}" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="31" Grid.RowSpan="2" />
+        <Button x:Name="GrabButton" Content="Сбор" Margin="10,111,5,0" Click="GrabButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Style="{DynamicResource RoundedButton}" RenderTransformOrigin="0.505,0.518"/>
+        <Button x:Name="StopButton" Content="Стоп" Margin="5,111,9,0" RenderTransformOrigin="0.462,0.5" Click="StopButton_Click" IsEnabled="False" Grid.Row="1" Height="28" VerticalAlignment="Top" Grid.Column="1" Style="{DynamicResource RoundedButton}"/>
+
+        <Label Content="Сохранение результата" Margin="10,0,9,106" Grid.Row="3" VerticalAlignment="Bottom" FontWeight="Bold" Height="26" Grid.ColumnSpan="2" Padding="0,5,5,5"/>
+
+        <Button x:Name="SaveDataToFile" Content="Сохранить" Margin="10,0,10,10" Grid.Row="3" Height="33" Command="{Binding SaveToFileCommand}" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Style="{DynamicResource RoundedButton}" />
+        <StackPanel Margin="10,0,9,28" Grid.Row="3" Height="78" VerticalAlignment="Bottom" Grid.ColumnSpan="2">
+            <Label Content="Выберите формат" Padding="0,5,6,5"/>
+            <RadioButton GroupName="SaveFormat" Content="CSV"  IsChecked="{ Binding CurrentFormat, Converter={StaticResource enumToBoolConverter}, ConverterParameter=csv }" />
+            <RadioButton GroupName="SaveFormat" Content="TXT" IsChecked="{ Binding CurrentFormat, Converter={StaticResource enumToBoolConverter}, ConverterParameter=txt }" />
+        </StackPanel>
+
+        <CheckBox x:Name="checkBoxDemo" Content="DEMO" Grid.Column="2" Margin="0,16,8,17" HorizontalAlignment="Right" IsChecked="{Binding Path=Demo}" VerticalAlignment="Center" Height="16" Width="54"/>
+        <Grid Height="16" Margin="10,58,9,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <Ellipse x:Name="EStatus1" Grid.Column="0" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="1" FontSize="8" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <Ellipse x:Name="EStatus2" Grid.Column="1" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="2" FontSize="8" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <Ellipse x:Name="EStatus3" Grid.Column="2" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="3" FontSize="8" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <Ellipse x:Name="EStatus4" Grid.Column="3" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="4" FontSize="8" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <Ellipse x:Name="EStatus5" Grid.Column="4" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="5" FontSize="8" Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <Ellipse x:Name="EStatus6" Grid.Column="5" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="6" FontSize="8" Grid.Column="5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <Ellipse x:Name="EStatus7" Grid.Column="6" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="7" FontSize="8" Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <Ellipse x:Name="EStatus8" Grid.Column="7" Fill="#FFF4F4F5" Stroke="#FFC9C9C9" Width="16"  Height="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="8" FontSize="8" Grid.Column="7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+
+        <Grid Height="16" Margin="10,77,9,0" Grid.Row="1" VerticalAlignment="Top" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="checkBox1" Grid.Column="0" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox2" Grid.Column="1" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox3" Grid.Column="2" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox4" Grid.Column="3" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox5" Grid.Column="4" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox6" Grid.Column="5" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox7" Grid.Column="6" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+            <CheckBox x:Name="checkBox8" Grid.Column="7" Content="" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center" Width="16" Height="15" Padding="0,0,0,1" HorizontalContentAlignment="Center" IsChecked="True"/>
+        </Grid>
+        <Grid Grid.ColumnSpan="2" Margin="10,151,9,0" Grid.Row="1" VerticalAlignment="Top" Height="72">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20*"/>
+                <RowDefinition Height="30*" MinHeight="48"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50*"/>
+                <ColumnDefinition Width="50*"/>
+                <ColumnDefinition Width="50*"/>
+                <ColumnDefinition Width="50*"/>
+            </Grid.ColumnDefinitions>
+            <Label x:Name="label2" Content="Масштаб X" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0" HorizontalAlignment="Center" Padding="0"/>
+            <Label x:Name="label2_Copy" Content="Масштаб Y" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0" HorizontalAlignment="Center" Grid.Column="2" Padding="0"/>
+            <Button x:Name="buttonXMinus" Content="-" Margin="0" Grid.Row="1" FontSize="20" Style="{DynamicResource BlueButton}" HorizontalAlignment="Left" VerticalAlignment="Center" Height="48" Width="48" Foreground="#FF4D4D4D" Click="buttonXMinus_Click"/>
+            <Button x:Name="buttonXPlus" Content="+" Margin="0" Grid.Row="1"  FontSize="20" Grid.Column="1" Style="{DynamicResource BlueButton}" Height="48" Width="48" HorizontalAlignment="Center" VerticalAlignment="Center" Click="buttonXPlus_Click"/>
+            <Button x:Name="buttonYMinus" Content="-" Margin="0" Grid.Row="1" FontSize="20" Grid.Column="2" Style="{DynamicResource BlueButton}" Click="buttonYMinus_Click" Width="48" Height="48" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <Button x:Name="buttonYPlus" Content="+" Margin="0" Grid.Row="1" FontSize="20" Grid.Column="3" Style="{DynamicResource BlueButton}" Click="buttonYPlus_Click" Width="48" HorizontalAlignment="Right" VerticalAlignment="Center" Height="48"/>
+
+        </Grid>
+        <Button x:Name="buttonAutoScale" Content="Автомасштаб" Margin="10,228,9,0" Grid.Row="1" FontSize="14" Style="{DynamicResource BlueButton}" VerticalAlignment="Top" Height="47" Foreground="#FF4D4D4D" Click="buttonAutoScale_Click" Grid.ColumnSpan="2"/>
+        <Label x:Name="label3" Content="Статус соединения с датчиками:" Margin="10,30,10,0" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Top" Height="26" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"/>
+        <Label x:Name="label4" Content="ILD TCP Grabber" Margin="10,10,37,10" FontSize="18" FontFamily="Segoe UI Semibold" Grid.ColumnSpan="2" Padding="0" VerticalContentAlignment="Center"/>
+        <Button x:Name="buttonOpenSettings" Content="Настройки" Grid.Column="2" HorizontalAlignment="Left" Margin="11,10,0,9" Width="86" Style="{DynamicResource RoundedButton}" Click="buttonOpenSettings_Click"/>
+        <Button x:Name="buttonOpenService" Content="Сервисное меню" Grid.Column="2" HorizontalAlignment="Left" Margin="111,10,0,9" Width="126" Style="{DynamicResource RoundedButton}" Click="buttonOpenService_Click"/>
+
+
+    </Grid>
+</Window> 
