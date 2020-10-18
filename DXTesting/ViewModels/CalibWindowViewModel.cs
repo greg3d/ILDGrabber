@@ -150,6 +150,14 @@ namespace DXTesting
         {
             var cons = Connectionz.getInstance();
             cons.Calibrate();
+            OnPropertyChanged("Offset1");
+            OnPropertyChanged("Offset2");
+            OnPropertyChanged("Offset3");
+            OnPropertyChanged("Offset4");
+            OnPropertyChanged("Offset5");
+            OnPropertyChanged("Offset6");
+            OnPropertyChanged("Offset7");
+            OnPropertyChanged("Offset8");
         }
 
         public CalibWindowViewModel()

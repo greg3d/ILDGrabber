@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Sockets;
@@ -191,12 +192,20 @@ namespace DXTesting
 
                 Name = "test laser" + ConnID.ToString();
                 Serial = "0000";
-                Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
+
+                if (IsReady)
+                {
+                    Notify?.Invoke(this, new ConnectionEventArgs("PrepareSuccess", ConnID));
+                } else
+                {
+                    Notify?.Invoke(this, new ConnectionEventArgs("ConnectionError", ConnID));
+                }
+                
                 localMode = 100;
             }
             else
             {
-                
+
                 while (localMode < 10)
                 {
                     switch (localMode)
@@ -336,7 +345,7 @@ namespace DXTesting
 
             var measrate = (int)settings.Fs;
 
-            Rate = measrate * 1000;
+            Rate = measrate; //*1000
             double drate = measrate / 1000d;
 
             NumberFormatInfo nfi = new NumberFormatInfo();
@@ -345,14 +354,13 @@ namespace DXTesting
 
             var srate = drate.ToString(nfi);
 
-
+            //Trace.WriteLine(srate);
 
             IsPostProc = false;
             IsGrabbing = false;
 
             if (IsReady)
             {
-                SendCmd("MEASRATE " + srate);
 
                 vdata = new RealData(5000, true);
 
@@ -360,8 +368,8 @@ namespace DXTesting
                     TaskCreationOptions.LongRunning,
                     TaskContinuationOptions.LongRunning
                 );
-                ticks = 0;
 
+                ticks = 0;
 
                 if (demoMode)
                 {
@@ -369,6 +377,7 @@ namespace DXTesting
                 }
                 else
                 {
+                    SendCmd("MEASRATE " + srate);
                     grabbing = tf.StartNew(GrabbingTask);
                 }
 
@@ -401,8 +410,8 @@ namespace DXTesting
                 FileWriter?.Close();
                 fs?.Close();
 
-                fs?.Dispose();
                 FileWriter?.Dispose();
+                fs?.Dispose();
 
                 //NeedRedraw?.Invoke(this);
                 Notify?.Invoke(this, new ConnectionEventArgs("GrabbedSuccess", ConnID));
@@ -420,7 +429,7 @@ namespace DXTesting
 
             if (IsReady)
             {
-                SendCmd("MEASRATE " + srate);
+
 
                 tf = new TaskFactory(
                     TaskCreationOptions.LongRunning,
@@ -430,20 +439,22 @@ namespace DXTesting
                 if (demoMode)
                 {
                     //grabbing = tf.StartNew(DemoGrabbingTask);
+                    CurVal = new Random().NextDouble() * Range / 4 + Range / 2;
                 }
                 else
                 {
+                    SendCmd("MEASRATE " + srate);
                     grabbing = tf.StartNew(CalibrateTask);
+                    grabbing.Wait();
+                    SendCmd("OUTPUT NONE");
                 }
 
-                grabbing.Wait();
-                SendCmd("OUTPUT NONE");
                 IsGrabbing = false;
 
 
-                settings.setOffset(ConnID + 1, Math.Round(CurVal, 3));
+                settings.setOffset(ConnID + 1, Math.Round(CurVal + ConnID, 3));
 
-                MessageBox.Show("Готово!");
+
 
                 //Notify?.Invoke(this, new ConnectionEventArgs("StartGrabSuccess", ConnID));
             }
@@ -483,31 +494,57 @@ namespace DXTesting
         {
             if (IsReady && IsConnected)
             {
+
+                //Rate = 0.5;
+
+                if (settings.OffsetMode == OffsetModeList.Standart)
+                {
+                    Offset = 0;
+                }
+
+                if (settings.OffsetMode == OffsetModeList.Symmetric)
+                {
+                    Offset = Range / 2;
+                }
+
+                if (settings.OffsetMode == OffsetModeList.Assymetric)
+                {
+                    Offset = settings.getOffset(ConnID + 1);
+                }
+
                 fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
                 FileWriter = new BinaryWriter(fs);
 
-                ticks = 0;
+                GrabTrigger = true;
 
                 Thread.Sleep(50);
 
                 do
                 {
 
-                    int realSize = 48;
                     DateTime currentDate = DateTime.Now;
                     float curTick = currentDate.Second * 1000 + currentDate.Millisecond;
+
+                    
+
+                    int realSize = (int)Rate / 10;
+
 
                     float[] internalCount = new float[realSize];
                     float[] realValues = new float[realSize];
                     float[] timeValues = new float[realSize];
 
+                    //Trace.WriteLine(Rate.ToString());
+
                     for (int j = 0; j < realValues.Length; j++)
                     {
 
+                        float tt = ticks / (float)Rate;
+                        float val = (float) (Math.Sin(2.0 * 3.14 * tt) * Range/2 + Range/2 - Offset);
+
                         ticks++;
 
-                        float tt = (float)ticks / (float)Rate;
-                        float val = (float)Math.Sin(2f * 3.14f * tt) * Range + PortNum - 4000;
+                        //float val = (float)Rate;
 
                         internalCount[j] = curTick;
                         realValues[j] = val;
@@ -517,17 +554,20 @@ namespace DXTesting
 
                         Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
                         FileWriter.Write(package);
-
                     }
+
 
                     Task.Factory.StartNew(() =>
                     {
                         vdata.Push(timeValues, realValues, realSize);
                     });
 
+                    IsGrabbing = true;
+
                     Thread.Sleep(100);
 
-                    IsGrabbing = true;
+                    //Trace.WriteLine(ticks.ToString());
+                    //Trace.WriteLine(GrabTrigger);
 
                 }
                 while (GrabTrigger); // пока данные есть в потоке и не отменена операция
@@ -536,7 +576,6 @@ namespace DXTesting
 
         private void GrabbingTask()
         {
-
             if (IsConnected && IsReady)
             {
 
@@ -606,7 +645,6 @@ namespace DXTesting
 
                     size = stream.Read(data, 0, 2048);
 
-
                     if (size > 0)
                     {
 
@@ -661,8 +699,6 @@ namespace DXTesting
                             Buffer.BlockCopy(new float[] { curTick, tt, val }, 0, package, 0, 12);
                             FileWriter.Write(package);
                         }
-
-                        //TextStatus = Range.ToString("F1");
 
                         Task.Factory.StartNew(() =>
                         {

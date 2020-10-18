@@ -384,7 +384,14 @@ namespace DXTesting
 
                             if ((st.Y > curPlot.y1) & (st.Y < curPlot.y2))
                             {
-                                graphics.DrawLine(Pens.LightGray, p1, p2);
+                                if (k == 0f)
+                                {
+                                    graphics.DrawLine(Pens.Green, p1, p2);
+                                } else
+                                {
+                                    graphics.DrawLine(Pens.LightGray, p1, p2);
+                                }
+                                
                                 graphics.DrawString(k.ToString("F1"), smallFont, Brushes.Gray, curPlot.x2 + 2, p2.Y, sf);
                             }
                         }

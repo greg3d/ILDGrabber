@@ -188,6 +188,7 @@ namespace DXTesting
                 cons[i].StartCalibrate();
 
             }
+            MessageBox.Show("Готово!");
 
         }
 
